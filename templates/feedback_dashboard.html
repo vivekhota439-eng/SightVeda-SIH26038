@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Clinician Feedback Dashboard • Continuous Quality Improvement{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">Clinician Feedback & Model Improvement Dashboard</h1>
+        <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
+            Active Learning Dataset • Doctor Ground Truth Submissions & AI Accuracy Tracking
+        </div>
+    </div>
+    <a href="/" class="btn btn-outline">⬅ Back to Dashboard</a>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid #0d9488;">
+        <div class="stat-label">Total Feedback Entries</div>
+        <div class="stat-val" style="color: #0f766e;">{{ total_fb }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Logged by Doctors</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #16a34a;">
+        <div class="stat-label">Doctor Agreement Rate</div>
+        <div class="stat-val" style="color: #16a34a;">{{ agreement_rate }}%</div>
+        <div style="font-size: 11.5px; color: #64748b;">Confirmed AI Diagnosis</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-label">Over-Predicted by AI</div>
+        <div class="stat-val" style="color: #d97706;">{{ over_count }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Flagged by Reviewers</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #dc2626;">
+        <div class="stat-label">Under-Predicted / Missed</div>
+        <div class="stat-val" style="color: #dc2626;">{{ under_count }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">High-Priority for Retraining</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <span>🩺</span> Logged Clinician Review Records
+        </h3>
+        <span style="font-size: 12px; color: #64748b;">Saved in outputs/doctor_feedback/</span>
+    </div>
+
+    {% if feedback_list and feedback_list|length > 0 %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+        <thead>
+            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                <th style="padding: 10px 12px;">Timestamp</th>
+                <th style="padding: 10px 12px;">Doctor & Facility</th>
+                <th style="padding: 10px 12px;">Patient ID</th>
+                <th style="padding: 10px 12px;">AI vs Doctor Grade</th>
+                <th style="padding: 10px 12px;">Agreement</th>
+                <th style="padding: 10px 12px;">Grad-CAM Utility</th>
+                <th style="padding: 10px 12px;">Clinical Engineering Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in feedback_list %}
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 12px; color: #64748b;">{{ f.timestamp }}</td>
+                <td style="padding: 10px 12px;"><strong>{{ f.doctor_name }}</strong><br><span style="color: #64748b; font-size: 11px;">{{ f.specialty }} ({{ f.facility }})</span></td>
+                <td style="padding: 10px 12px;"><strong>{{ f.patient_id }}</strong></td>
+                <td style="padding: 10px 12px;">
+                    AI: <strong>Grade {{ f.ai_grade }}</strong> ➔ Doctor: <strong style="color: #0284c7;">Grade {{ f.doctor_grade }}</strong>
+                </td>
+                <td style="padding: 10px 12px;">
+                    <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;
+                        background: {% if 'Agree' in f.agreement %}#dcfce7; color: #166534;{% elif 'Over' in f.agreement %}#ffedd5; color: #9a3412;{% else %}#fee2e2; color: #991b1b;{% endif %}">
+                        {{ f.agreement }}
+                    </span>
+                </td>
+                <td style="padding: 10px 12px; font-size: 11.5px; color: #475569;">{{ f.gradcam_utility }}</td>
+                <td style="padding: 10px 12px; font-size: 11.5px; color: #334155;">{{ f.comments or 'None' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 30px; color: #64748b;">
+        No clinician feedback submitted yet. After generating a report, doctors can submit feedback directly in Section 10 of the report.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

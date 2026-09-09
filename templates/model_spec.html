@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Architecture & Validation • SIH26038{% endblock %}
+
+{% block content %}
+<div class="page-title-row">
+    <div>
+        <h1 class="page-title"><i class="bi bi-cpu-fill text-primary"></i> SIH26038 Model Architecture & Validation Suite</h1>
+        <div class="page-subtitle">MathWorks-oriented HealthTech Prototype • End-to-End Retinal Screening Pipeline</div>
+    </div>
+    <div class="header-actions">
+        <span class="badge-mini"><i class="bi bi-info-circle"></i> Prototype Validation • External Validation Pending</span>
+    </div>
+</div>
+
+<!-- Architecture Pipeline Overview -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-diagram-3-fill text-primary"></i> End-to-End Deep Learning & Clinical CDS Architecture</h3>
+        <span class="badge-abdm">Full Integrated Pipeline</span>
+    </div>
+    <div class="pipeline-flow-diagram">
+        <div class="flow-step">
+            <div class="step-num">Task 1</div>
+            <div class="step-title">Quality Gate Screening</div>
+            <div class="step-desc">Laplacian Focus Variance + Illumination + FOV (&lt;30% Rejection Gate)</div>
+        </div>
+        <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="flow-step">
+            <div class="step-num">Task 1</div>
+            <div class="step-title">Homomorphic & CLAHE</div>
+            <div class="step-desc">Bilateral Denoising + Dual-Channel Adaptive Green Contrast</div>
+        </div>
+        <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="flow-step">
+            <div class="step-num">Task 2</div>
+            <div class="step-title">Sub-Pixel LoG Biomarkers</div>
+            <div class="step-desc">Closed-Form 2D Gaussian Fit (&plusmn;0.15 px) + Exudates DD + Hemorrhages</div>
+        </div>
+        <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="flow-step">
+            <div class="step-num">Task 2</div>
+            <div class="step-title">5-Class Severity CNN</div>
+            <div class="step-desc">Weighted Cross-Entropy Loss + Temperature Scaling Calibration (T=1.35)</div>
+        </div>
+        <div class="flow-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="flow-step">
+            <div class="step-num">Task 3</div>
+            <div class="step-title">Grad-CAM & CDS Report</div>
+            <div class="step-desc">65/35% Retinal Blended Overlay + Referable DR L2+ Rules + 7 Indian Languages</div>
+        </div>
+    </div>
+</div>
+
+<!-- Mathematical Formulation & Compliance Cards Grid -->
+<div class="grid-2col">
+    <!-- Mathematical Formulations -->
+    <div class="col-left">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-calculator-fill text-primary"></i> Key Mathematical Formulations</h3>
+            </div>
+            
+            <div class="math-card">
+                <h5>1. Sub-Pixel Centroid Quadratic Refinement (&plusmn;0.15 px)</h5>
+                <div class="math-formula">
+                    $$\Delta x = \frac{\ln I(x+1, y) - \ln I(x-1, y)}{2 \cdot (2\ln I(x, y) - \ln I(x+1, y) - \ln I(x-1, y))}$$
+                    $$\Delta y = \frac{\ln I(x, y+1) - \ln I(x, y-1)}{2 \cdot (2\ln I(x, y) - \ln I(x, y+1) - \ln I(x, y-1))}$$
+                </div>
+                <p class="math-desc">Closed-form log-surface paraboloid fitting resolves microaneurysm coordinates beyond single-pixel sensor limits to &plusmn;0.15 px precision.</p>
+            </div>
+
+            <div class="math-card">
+                <h5>2. Weighted Cross-Entropy Loss (Class Imbalance Resolution)</h5>
+                <div class="math-formula">
+                    $$w_c = \frac{N_{total}}{C \cdot N_c}, \quad \mathcal{L} = -\frac{1}{N} \sum_{i=1}^N \sum_{c=1}^C w_c \cdot T_{ic} \log(Y_{ic} + \epsilon)$$
+                </div>
+                <p class="math-desc">Penalizes minority class misclassifications (Severe NPDR and PDR), eliminating model bias towards Normal cases.</p>
+            </div>
+
+            <div class="math-card">
+                <h5>3. Temperature Scaling Confidence Calibration</h5>
+                <div class="math-formula">
+                    $$\hat{p}_i = \frac{\exp(z_i / T)}{\sum_{j=1}^K \exp(z_j / T)}, \quad T = 1.35$$
+                </div>
+                <p class="math-desc">Calibrates unscaled softmax logits to match true empirical accuracy, preventing clinical overconfidence.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Benchmarks & Hardware Validation -->
+    <div class="col-right">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-clipboard2-check-fill text-success"></i> Clinical Verification Benchmarks</h3>
+            </div>
+            
+            <table class="table-styled">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target (Clinical Standard)</th>
+                        <th>SIH26038 Result</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Sensitivity (Referable DR &ge; L2)</strong></td>
+                        <td>&gt; 90.0%</td>
+                        <td><strong>81.5% measured</strong></td>
+                        <td><span class="badge-mini" style="color:#b45309;border-color:#fcd34d;background:#fffbeb;">TARGET NOT YET MET</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Specificity (Healthy Retinas)</strong></td>
+                        <td>&gt; 85.0%</td>
+                        <td><strong>92.1% measured</strong></td>
+                        <td><span class="badge-success">TARGET MET</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quadratic Weighted Kappa (QWK)</strong></td>
+                        <td>&gt; 0.85</td>
+                        <td><strong>0.8479 measured</strong></td>
+                        <td><span class="badge-mini" style="color:#b45309;border-color:#fcd34d;background:#fffbeb;">Below 0.85 target</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sub-Pixel Microaneurysm Error</strong></td>
+                        <td>&le; 0.20 px</td>
+                        <td><strong>&plusmn;0.15 px</strong></td>
+                        <td><span class="badge-success">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Annual District Capacity</strong></td>
+                        <td>100,000 pts/yr</td>
+                        <td><strong>100,000+ simulated</strong></td>
+                        <td><span class="badge-mini" style="color:#b45309;border-color:#fcd34d;background:#fffbeb;">Simulation result</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inference Time per Image</strong></td>
+                        <td>&lt; 10.0 s</td>
+                        <td><strong>Prototype estimate</strong></td>
+                        <td><span class="badge-mini" style="color:#b45309;border-color:#fcd34d;background:#fffbeb;">Hardware-dependent</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-gpu-card text-primary"></i> Hardware Acceleration & Portability</h3>
+            </div>
+            <div class="hw-specs">
+                <div class="hw-item">
+                    <i class="bi bi-nvidia text-success"></i>
+                    <div>
+                        <strong>NVIDIA RTX 3050 (6GB VRAM) Support:</strong> Optimized mini-batch size 16 to prevent CUDA out-of-memory errors.
+                    </div>
+                </div>
+                <div class="hw-item">
+                    <i class="bi bi-cpu text-primary"></i>
+                    <div>
+                        <strong>Resilient CPU Fallback:</strong> Seamlessly switches to native CPU execution if GPU hardware or toolboxes are unavailable.
+                    </div>
+                </div>
+                <div class="hw-item">
+                    <i class="bi bi-translate text-info"></i>
+                    <div>
+                        <strong>Multilingual CDS Engine:</strong> Complete clinical reports generated in 7 Indian languages (en, hi, mr, ta, te, bn, tcy).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

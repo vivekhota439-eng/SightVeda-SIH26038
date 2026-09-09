@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Screening Report • {{ result.patient_info.name }}{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <!-- Report Top Header -->
+    <div class="report-header-banner">
+        <div>
+            <span class="report-badge">AYUSHMAN BHARAT DIGITAL HEALTH MISSION (ABDM)</span>
+            <h1 class="report-title">PHC Clinical Ophthalmic Decision Support Report</h1>
+            <div class="report-sub">MathWorks SIH26038 MedTech Suite • ICDR 5-Class Retinal Diagnostic Verdict</div>
+        </div>
+        <div class="report-header-actions">
+            <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer-fill"></i> Print Clinical Report</button>
+            <a href="/screen" class="btn btn-outline"><i class="bi bi-plus-lg"></i> New Screening</a>
+        </div>
+    </div>
+
+    <!-- Patient Details Strip -->
+    <div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+        <div class="patient-strip-grid">
+            <div><strong>Patient ID:</strong> {{ result.patient_info.patient_id }}</div>
+            <div><strong>Name:</strong> {{ result.patient_info.name }}</div>
+            <div><strong>Age / Sex:</strong> {{ result.patient_info.age }} Y / {{ result.patient_info.gender }}</div>
+            <div><strong>Eye:</strong> {{ result.patient_info.laterality }}</div>
+            <div><strong>HbA1c:</strong> {{ result.patient_info.hba1c }}</div>
+            <div><strong>BP:</strong> {{ result.patient_info.bp }}</div>
+            <div><strong>Date:</strong> {{ result.timestamp }}</div>
+        </div>
+    </div>
+
+    <!-- Verdict Card -->
+    <div class="verdict-banner grade-{{ result.predicted_grade }}">
+        <div class="verdict-grade">{{ result.translations.grade_title }}</div>
+        <div class="verdict-urgency"><i class="bi bi-clock-history"></i> {{ result.translations.urgency }}</div>
+        <div class="verdict-stats">
+            <span>Calibrated Confidence: <strong>{{ result.confidence_pct }}%</strong> ({{ result.calibration.certainty }})</span>
+            <span>Peak Lesion Quadrant: <strong>{{ result.biomarkers.peak_quadrant }}</strong></span>
+            <span>Referable Status: <strong>{% if result.referable_dr %}REFERABLE DR (Level 2+){% else %}Non-Referable{% endif %}</strong></span>
+        </div>
+    </div>
+
+    <!-- 4-Axes Clinical Image Viewer -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-grid-fill text-primary"></i> 4-Axes Clinical Visual Evidence (MathWorks MATLAB GUI Layout)</h3>
+        </div>
+        <div class="axes-grid">
+            <div class="axis-box">
+                <div class="axis-title">1. Raw Fundus Photo</div>
+                <img src="{{ web_images.raw_fundus }}" alt="Raw" class="axis-img">
+            </div>
+            <div class="axis-box">
+                <div class="axis-title text-primary">2. Task 1 CLAHE Enhanced</div>
+                <img src="{{ web_images.enhanced_fundus }}" alt="CLAHE" class="axis-img">
+            </div>
+            <div class="axis-box">
+                <div class="axis-title text-warning">3. Sub-Pixel Biomarkers Map (±0.15px)</div>
+                <img src="{{ web_images.biomarker_annotated }}" alt="Biomarkers" class="axis-img">
+            </div>
+            <div class="axis-box">
+                <div class="axis-title text-danger">4. Grad-CAM Retinal Overlay</div>
+                <img src="{{ web_images.gradcam_overlay }}" alt="Grad-CAM" class="axis-img">
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Player -->
+    {% if audio_url %}
+    <div class="card" style="padding: 14px 20px;">
+        <div class="audio-player-box" style="margin: 0;">
+            <div class="audio-info">
+                <i class="bi bi-volume-up-fill audio-icon"></i>
+                <div>
+                    <strong>Patient Voice Counseling (हिंदी आवाज):</strong>
+                    <div style="font-size: 11.5px; color: #64748b;">Spoken instructions for patient counseling</div>
+                </div>
+            </div>
+            <audio controls src="{{ audio_url }}" style="height: 38px;"></audio>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Counseling Box -->
+    <div class="card">
+        <div class="counseling-box" style="margin: 0;">
+            <div class="counseling-section">
+                <h5 class="c-heading text-primary"><i class="bi bi-question-circle-fill"></i> Etiology / यह बीमारी क्यों हुई है?</h5>
+                <p class="c-text">{{ result.translations.etiology }}</p>
+            </div>
+
+            <div class="counseling-section">
+                <h5 class="c-heading text-success"><i class="bi bi-egg-fried"></i> Dietary Parhez & Precautions (खान-पान का परहेज)</h5>
+                <ul class="c-list">
+                    {% for p in result.translations.parhez %}
+                    <li>{{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="counseling-section">
+                <h5 class="c-heading text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Physical Lifting Restrictions (वजन उठाने पर पाबंदी)</h5>
+                <p class="c-text">{{ result.translations.lifting_restriction }}</p>
+            </div>
+
+            <div class="counseling-section">
+                <h5 class="c-heading text-info"><i class="bi bi-hospital-fill"></i> Recommended Referral Facility (रेफरल अस्पताल)</h5>
+                <p class="c-text">{{ result.translations.referral_facility }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

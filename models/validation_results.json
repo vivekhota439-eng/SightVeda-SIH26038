@@ -1,0 +1,75 @@
+{
+  "backbone": "efficientnet_b0",
+  "executionEnvironment": "gpu",
+  "finalValidationAccuracy": 74.37689261588632,
+  "validationQWK": 0.8478910273705738,
+  "trainingTimeMinutes": 845.8695544733333,
+  "numEpochs": 30,
+  "miniBatchSize": 16,
+  "learningRate": 0.0001,
+  "confusionMatrix": [
+    [
+      1094,
+      102,
+      58,
+      0,
+      5
+    ],
+    [
+      127,
+      470,
+      78,
+      7,
+      6
+    ],
+    [
+      172,
+      177,
+      500,
+      81,
+      46
+    ],
+    [
+      2,
+      35,
+      35,
+      550,
+      43
+    ],
+    [
+      9,
+      40,
+      40,
+      37,
+      579
+    ]
+  ],
+  "perClassAccuracy": [
+    0.868943606036537,
+    0.6831395348837209,
+    0.5122950819672131,
+    0.8270676691729323,
+    0.8212765957446808
+  ],
+  "classWeights": [
+    0.6415551346719565,
+    1.1735423502683973,
+    0.8272511649432963,
+    1.2132188384442633,
+    1.1444325116720868
+  ],
+  "bestObservedPrototypeValidationAccuracy": 78.0,
+  "targetSensitivityPct": 90.0,
+  "targetSpecificityPct": 85.0,
+  "targetNote": "SIH26038 target: >90% sensitivity and >85% specificity for referable DR (Level 2+). Current included validation artifact does not yet meet the sensitivity target; external clinical validation and further optimization are required.",
+  "clinical_metrics": {
+    "total_samples": 4293,
+    "sensitivity_referable_dr": 81.46,
+    "specificity_healthy": 92.09,
+    "true_positives": 1911,
+    "true_negatives": 1793,
+    "false_positives": 154,
+    "false_negatives": 435,
+    "qwk_category": "Substantial / Excellent Agreement (QWK > 0.80)"
+  }
+}

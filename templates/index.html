@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}SightVeda Dashboard • PHC Tele-Ophthalmology Portal (SIH26038){% endblock %}
+
+{% block content %}
+<div class="page-title-row">
+    <div>
+        <h1 class="page-title"><i class="bi bi-speedometer2 text-primary"></i> SightVeda • Tele-Ophthalmology Triage Dashboard</h1>
+        <div class="page-subtitle">Ayushman Bharat Digital Mission (ABDM) • MathWorks SIH26038 MedTech Suite</div>
+    </div>
+    <div class="header-actions">
+        <a href="/patient-history" class="btn btn-outline btn-lg"><i class="bi bi-clock-history"></i> Patient History</a>
+        <a href="/screen" class="btn btn-primary btn-lg"><i class="bi bi-camera-fill"></i> ➕ New Patient Screening (नई जांच)</a>
+    </div>
+</div>
+
+<!-- Stats Summary Grid -->
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid #0284c7;">
+        <div class="stat-label">Total Screened</div>
+        <div class="stat-val">{{ stats.total_screened }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Completed Clinical Reports</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #16a34a;">
+        <div class="stat-label">Normal (Grade 0)</div>
+        <div class="stat-val" style="color: #16a34a;">{{ stats.normal_count }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Annual Follow-Up (Routine)</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-label">Moderate NPDR (Grade 1-2)</div>
+        <div class="stat-val" style="color: #d97706;">{{ stats.medium_count }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">OCT Referral & Parhez</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #dc2626;">
+        <div class="stat-label">High Risk (Grade 3-4)</div>
+        <div class="stat-val" style="color: #dc2626;">{{ stats.high_risk_count }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Urgent VR Specialist Alert</div>
+    </div>
+</div>
+
+<!-- Active AI Model Notice Banner -->
+<div class="model-status-card" style="background: #f0fdf4; border-color: #86efac;">
+    <div class="model-status-left">
+        <span class="pulse-dot"></span>
+        <div>
+            <strong style="color: #166534; font-size: 14.5px;">✓ LIVE TRAINED MODEL LOADED: <code>models/model_weights.mat</code> &amp; <code>validation_results.mat</code></strong>
+            <div style="font-size: 12.5px; color: #15803d; margin-top: 3px;">
+                Backbone: <strong>EfficientNet-B0</strong> • Best observed prototype accuracy: <strong>78.0%</strong> • Included artifact accuracy: <strong>{{ metrics.finalValidationAccuracy }}%</strong> • QWK: <strong>{{ metrics.validationQWK }}</strong> • 4,293 confusion-matrix samples • Trained {{ metrics.trainingTimeHours }}h on GPU
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="/validation" class="btn btn-success" style="font-size: 12.5px; padding: 6px 14px;"><i class="bi bi-patch-check-fill"></i> View 5x5 Confusion Matrix</a>
+        <a href="/simulation" class="btn btn-outline" style="font-size: 12.5px; padding: 6px 14px;"><i class="bi bi-activity"></i> 100k Tele-Sim</a>
+    </div>
+</div>
+
+<!-- Quick Feature Cards Grid -->
+<div class="quick-feature-grid">
+    <div class="q-card" onclick="window.location.href='/screen'">
+        <div class="q-icon bg-blue"><i class="bi bi-eye"></i></div>
+        <h4>1-Click Clinical Screening</h4>
+        <p>Test with patient webcam, file upload, or presets (including your uploaded synthetic fundus image).</p>
+        <span class="q-link">Start Screening <i class="bi bi-arrow-right"></i></span>
+    </div>
+    <div class="q-card" onclick="window.location.href='/simulation'">
+        <div class="q-icon bg-purple"><i class="bi bi-activity"></i></div>
+        <h4>District Telemedicine Simulator</h4>
+        <p>Discrete-event queue simulation modeling 100,000+ patients/yr across 35 PHCs with 2G/3G/4G bandwidth.</p>
+        <span class="q-link">Launch Simulator <i class="bi bi-arrow-right"></i></span>
+    </div>
+    <div class="q-card" onclick="window.location.href='/patient-history'">
+        <div class="q-icon bg-blue"><i class="bi bi-clock-history"></i></div>
+        <h4>Patient History & Reports</h4>
+        <p>Find previous patients by name, age, gender or patient ID and reopen/download their earlier PDF reports.</p>
+        <span class="q-link">Open Patient History <i class="bi bi-arrow-right"></i></span>
+    </div>
+    <div class="q-card" onclick="window.location.href='/model-spec'">
+        <div class="q-icon bg-green"><i class="bi bi-journal-medical"></i></div>
+        <h4>Architecture & Benchmarks</h4>
+        <p>Mathematical formulations for LoG sub-pixel centroid fit, weighted cross-entropy loss, and temperature scaling.</p>
+        <span class="q-link">Read Specs <i class="bi bi-arrow-right"></i></span>
+    </div>
+</div>
+
+<!-- Recent Patient Screenings List -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="bi bi-clipboard2-check text-primary"></i> Recent Patient Clinical Screenings
+        </h3>
+        <span style="font-size: 12px; color: #64748b;">Showing latest records</span>
+    </div>
+
+    {% if recent_screenings and recent_screenings|length > 0 %}
+    <table class="table-styled">
+        <thead>
+            <tr>
+                <th>Date / Time</th>
+                <th>Patient ID & Name</th>
+                <th>Age / Sex</th>
+                <th>Examined Eye</th>
+                <th>DR Severity Grade</th>
+                <th>Confidence</th>
+                <th>Peak Quadrant</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in recent_screenings %}
+            <tr>
+                <td style="color: #64748b;">{{ p.date }}</td>
+                <td><strong>{{ p.patient_id }}</strong> - {{ p.name }}</td>
+                <td>{{ p.age }} Y / {{ p.gender }}</td>
+                <td>{{ p.laterality }}</td>
+                <td>
+                    <span class="badge-grade grade-{{ p.grade }}">
+                        Grade {{ p.grade }} ({{ p.grade_label }})
+                    </span>
+                </td>
+                <td style="font-family: monospace;">{{ p.confidence }}%</td>
+                <td>{{ p.peak_quadrant or 'ST' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox empty-icon"></i>
+        <p>No screening records in database yet. Click "New Patient Screening" to run your first retinal analysis!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

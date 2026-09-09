@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Patient History • SightVeda{% endblock %}
+{% block content %}
+<div class="page-title-row">
+  <div>
+    <h1 class="page-title"><i class="bi bi-clock-history text-primary"></i> Patient History & Previous Reports</h1>
+    <div class="page-subtitle">Search an existing patient and reopen/download their previous screening report.</div>
+  </div>
+  <div class="header-actions"><a href="/screen" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Screening</a></div>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+  <div class="card-header"><h3 class="card-title"><i class="bi bi-search text-primary"></i> Find Previous Patient</h3></div>
+  <form method="get" action="/patient-history" style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr auto;gap:10px;align-items:end;">
+    <div><label>Name</label><input class="form-input" name="name" value="{{ name }}" placeholder="Patient name"></div>
+    <div><label>Age</label><input class="form-input" type="number" name="age" value="{{ age }}" placeholder="Age"></div>
+    <div><label>Gender</label><select class="form-input" name="gender"><option value="">Any</option><option value="Male" {% if gender=='Male' %}selected{% endif %}>Male</option><option value="Female" {% if gender=='Female' %}selected{% endif %}>Female</option><option value="Other" {% if gender=='Other' %}selected{% endif %}>Other</option></select></div>
+    <div><label>Patient ID</label><input class="form-input" name="patient_id" value="{{ patient_id }}" placeholder="Optional patient ID"></div>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+  </form>
+  <div style="margin-top:10px;font-size:12px;color:#64748b;">Tip: Name + age + gender can be used together. Patient ID is recommended when available.</div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3 class="card-title"><i class="bi bi-file-medical text-primary"></i> Previous Screening Reports</h3><span style="font-size:12px;color:#64748b;">{{ records|length }} match(es)</span></div>
+  {% if records %}
+  <div style="overflow-x:auto;">
+  <table class="table-styled">
+    <thead><tr><th>Date</th><th>Patient</th><th>Age / Gender</th><th>Eye</th><th>DR Grade</th><th>Confidence</th><th>Referable</th><th>Report</th></tr></thead>
+    <tbody>
+      {% for p in records %}
+      {% set idx = p._db_index %}
+      <tr>
+        <td>{{ p.date }}</td>
+        <td><strong>{{ p.name }}</strong><br><small>{{ p.patient_id }}</small></td>
+        <td>{{ p.age }} / {{ p.gender }}</td>
+        <td>{{ p.laterality }}</td>
+        <td><span class="badge-grade grade-{{ p.grade }}">Grade {{ p.grade }} — {{ p.grade_label }}</span></td>
+        <td>{{ p.confidence }}%</td>
+        <td>{% if p.referable %}<strong style="color:#dc2626">Yes</strong>{% else %}<strong style="color:#16a34a">No</strong>{% endif %}</td>
+        <td><a class="btn btn-outline" href="/patient-history/report/{{ idx }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="bi bi-person-x empty-icon"></i><p>No matching patient history found. Try another name, age, gender or patient ID.</p></div>
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top:18px;border-left:4px solid #f59e0b;">
+  <strong><i class="bi bi-shield-check"></i> Prototype data note</strong>
+  <p style="margin:6px 0 0;color:#64748b;font-size:12px;">This local prototype stores screening history in <code>outputs/screenings_db.json</code>. Use appropriate privacy/security controls before real-world clinical deployment.</p>
+</div>
+{% endblock %}

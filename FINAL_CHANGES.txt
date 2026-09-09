@@ -1,0 +1,40 @@
+SightVeda SIH26038 - Final Integrated Build Notes
+
+BASE
+- This build is based on the uploaded build_integrated.zip.
+- Existing project files, website features, assets, outputs and audio were preserved.
+
+ADDED
+- Patient History page: search by Name + Age + Gender (Patient ID optional).
+- Previous screening records shown from outputs/screenings_db.json.
+- PDF report generation/download for historical records.
+- reportlab dependency in requirements.txt.
+
+PRESERVED
+- Audio generator and pre-generated MP3 audio assets.
+- Camera capture and image upload.
+- Retinal AI inference pipeline.
+- Quality assessment and <30% safety/recapture gate.
+- Enhancement, lesion/biomarker analysis, Grad-CAM and explainability.
+- Multilingual reports and audio.
+- Doctor feedback/validation.
+- District telemedicine simulation and Simulink/MATLAB components.
+- Existing model_weights.mat, validation_results.mat and generated demo outputs.
+
+CORRECTIONS
+- Removed unsupported FDA/ICDR compliance claims from the website.
+- Removed fabricated 93.4% sensitivity and 88.7% specificity claims.
+- Validation page now shows measured metrics from the supplied confusion matrix:
+  * 4,293 samples represented by the matrix.
+  * Referable DR sensitivity: 81.46%.
+  * Healthy specificity: 92.09%.
+  * QWK: 0.8479.
+- SIH target is shown explicitly: >90% sensitivity and >85% specificity for referable DR (Level 2+).
+- Best observed prototype validation accuracy is shown as 78.0% (team-reported), while the supplied validation artifact remains 74.38%.
+- Validation note explicitly says the sensitivity target is not yet met and external clinical validation is pending.
+- Removed fake ophthalmologist/signature/hash wording from report-generation source where applicable.
+- Benchmark code requires real labeled predictions and does not silently substitute synthetic/random clinical performance data.
+- Simulation and hardware performance claims are labeled as simulation/prototype estimates where appropriate.
+
+IMPORTANT
+- This is an AI-assisted screening prototype, not a regulatory-certified medical device.

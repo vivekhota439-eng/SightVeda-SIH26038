@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}District Telemedicine Simulation • 100k+ Patients/Year{% endblock %}
+
+{% block content %}
+<div class="page-title-row">
+    <div>
+        <h1 class="page-title"><i class="bi bi-activity text-primary"></i> District-Scale Tele-Ophthalmology Queue Simulator</h1>
+        <div class="page-subtitle">MathWorks SIH26038 • Discrete-Event Queueing Simulation • 100,000+ Patients/Year across 35 PHCs</div>
+    </div>
+    <div class="header-actions">
+        <span class="badge-mini"><i class="bi bi-clock-history"></i> 6-Hour Shift Model (Poisson Arrivals)</span>
+    </div>
+</div>
+
+<!-- Controls Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-sliders text-primary"></i> District Network & Staffing Configuration</h3>
+        <span style="font-size: 12px; color: #64748b;">Interactive Discrete-Event Parameters</span>
+    </div>
+    <div class="sim-controls-grid">
+        <div class="form-group">
+            <label>Annual Patient Target</label>
+            <input type="range" id="simAnnualPatients" min="50000" max="200000" step="10000" value="100000" oninput="updateSimValue('lblPatients', this.value); runSim();">
+            <div class="range-val"><span id="lblPatients">100,000</span> Patients / Year (~385 / day)</div>
+        </div>
+
+        <div class="form-group">
+            <label>Uplink Bandwidth per PHC</label>
+            <div class="btn-group" id="bwGroup">
+                <button type="button" class="btn btn-outline" onclick="setBw('2G', this)">2G (96 kbps)</button>
+                <button type="button" class="btn btn-outline active" onclick="setBw('3G', this)">3G (480 kbps)</button>
+                <button type="button" class="btn btn-outline" onclick="setBw('4G', this)">4G (2.2 Mbps)</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Tele-Ophthalmologists (Doctors)</label>
+            <div class="btn-group" id="docGroup">
+                <button type="button" class="btn btn-outline" onclick="setDocs(1, this)">1 Doctor</button>
+                <button type="button" class="btn btn-outline active" onclick="setDocs(2, this)">2 Doctors (Optimal)</button>
+                <button type="button" class="btn btn-outline" onclick="setDocs(3, this)">3 Doctors</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Primary Health Centres (PHCs)</label>
+            <input type="number" id="simPhcs" class="form-input" value="35" min="10" max="100" onchange="runSim()" style="width: 120px;">
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Overview Grid -->
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid #0284c7;">
+        <div class="stat-label">Average Patient TAT</div>
+        <div class="stat-val" id="metricAvgTat">2.4 min</div>
+        <div style="font-size: 11.5px; color: #64748b;">Upload + AI + Doctor Triage</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #16a34a;">
+        <div class="stat-label">95th Percentile TAT</div>
+        <div class="stat-val" id="metricP95Tat" style="color: #16a34a;">5.2 min</div>
+        <div style="font-size: 11.5px; color: #64748b;">Complies with &lt; 10 min target</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-label">Doctor Utilization</div>
+        <div class="stat-val" id="metricUtil" style="color: #d97706;">68.5%</div>
+        <div style="font-size: 11.5px; color: #64748b;">Prevents clinician burnout</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
+        <div class="stat-label">Daily Completed Cases</div>
+        <div class="stat-val" id="metricCompleted" style="color: #8b5cf6;">385</div>
+        <div style="font-size: 11.5px; color: #64748b;">Fully verified clinical reports</div>
+    </div>
+</div>
+
+<!-- 4 Simulation Charts Grid -->
+<div class="charts-2x2-grid">
+    <div class="card">
+        <h4 class="card-title"><i class="bi bi-cloud-arrow-up text-primary"></i> 1. PHC Upload Backlog vs Bandwidth</h4>
+        <div class="chart-box">
+            <canvas id="chartPhcBacklog"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h4 class="card-title"><i class="bi bi-people-fill text-danger"></i> 2. Doctor Review Queue vs Staffing</h4>
+        <div class="chart-box">
+            <canvas id="chartDocQueue"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h4 class="card-title"><i class="bi bi-pie-chart-fill text-success"></i> 3. District Population Triage Split</h4>
+        <div class="chart-box">
+            <canvas id="chartTriageSplit"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h4 class="card-title"><i class="bi bi-award-fill text-warning"></i> 4. Resource Sizing Recommendations</h4>
+        <div class="recommendations-container" id="recContent">
+            <div class="rec-item">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <div>
+                    <strong>Minimum Uplink per PHC:</strong> &ge; 384 kbps (3G or 4G recommended). 2G causes upload backlog spikes during peak shift hours.
+                </div>
+            </div>
+            <div class="rec-item">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <div>
+                    <strong>Optimal Doctor Staffing:</strong> 2 Tele-Ophthalmologists per district. Yields 68% clinician duty load with sub-6 minute TAT.
+                </div>
+            </div>
+            <div class="rec-item">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <div>
+                    <strong>AI Triage Filter Efficiency:</strong> 76% of healthy retinas are instantly cleared, reducing doctor workload by 76%.
+                </div>
+            </div>
+            <div class="rec-item">
+                <i class="bi bi-shield-check text-primary"></i>
+                <div>
+                    <strong>Capacity Assessment:</strong> Full district scale of 100,000 patients/year is supported as a <strong>simulation scenario</strong> under the configured assumptions; field deployment requires measured throughput and network validation.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentBw = '3G';
+let currentDocs = 2;
+let chart1 = null;
+let chart2 = null;
+let chart3 = null;
+
+function updateSimValue(lblId, val) {
+    document.getElementById(lblId).innerText = parseInt(val).toLocaleString();
+}
+
+function setBw(bw, btn) {
+    currentBw = bw;
+    document.querySelectorAll('#bwGroup button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    runSim();
+}
+
+function setDocs(docs, btn) {
+    currentDocs = docs;
+    document.querySelectorAll('#docGroup button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    runSim();
+}
+
+async function runSim() {
+    const pts = document.getElementById('simAnnualPatients').value;
+    const phcs = document.getElementById('simPhcs').value;
+
+    const url = `/api/simulate?annual_patients=${pts}&bandwidth=${currentBw}&doctors=${currentDocs}&phcs=${phcs}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        renderSimCharts(data);
+    } catch(e) {
+        console.error("Simulation fetch error:", e);
+    }
+}
+
+function renderSimCharts(data) {
+    const m = data.metrics;
+    document.getElementById('metricAvgTat').innerText = m.avg_tat_mins + ' min';
+    document.getElementById('metricP95Tat').innerText = m.p95_tat_mins + ' min';
+    document.getElementById('metricUtil').innerText = m.doctor_utilization_pct + '%';
+    document.getElementById('metricCompleted').innerText = m.completed_cases;
+
+    const labels = data.charts.time_points.map(t => t + 'm');
+
+    // Chart 1: PHC Backlog
+    if (chart1) chart1.destroy();
+    const ctx1 = document.getElementById('chartPhcBacklog').getContext('2d');
+    chart1 = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `PHC Upload Queue (${currentBw})`,
+                data: data.charts.phc_backlog,
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Chart 2: Doctor Queue
+    if (chart2) chart2.destroy();
+    const ctx2 = document.getElementById('chartDocQueue').getContext('2d');
+    chart2 = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Awaiting Doctor Validation (${currentDocs} Docs)`,
+                data: data.charts.doc_queue,
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Chart 3: Triage Split Pie
+    if (chart3) chart3.destroy();
+    const ctx3 = document.getElementById('chartTriageSplit').getContext('2d');
+    chart3 = new Chart(ctx3, {
+        type: 'doughnut',
+        data: {
+            labels: ['Auto-Cleared Normal (76%)', 'Referable DR Level 2+ (17%)', 'Uncertain Case Review (7%)'],
+            datasets: [{
+                data: [76, 17, 7],
+                backgroundColor: ['#16a34a', '#dc2626', '#f59e0b']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+// Run simulation on page load
+document.addEventListener('DOMContentLoaded', runSim);
+</script>
+{% endblock %}

@@ -1,0 +1,5 @@
+﻿__pycache__/
+output/
+outputs/uploads/
+outputs/screenings_db.json
+outputs/retinal_*.png

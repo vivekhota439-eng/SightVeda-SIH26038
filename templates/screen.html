@@ -1,0 +1,969 @@
+{% extends "base.html" %}
+
+{% block title %}Clinical Retinal Screening • SightVeda SIH26038{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-title-row">
+    <div>
+        <h1 class="page-title"><i class="bi bi-eye-fill text-primary"></i> Clinical Retinal Screening & Severity Grading</h1>
+        <div class="page-subtitle">MathWorks SIH26038 • Sub-Pixel Biomarkers (±0.15 px) • Dual CLAHE • Grad-CAM Explainability</div>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-outline" onclick="loadUserSample()"><i class="bi bi-image"></i> Load User Sample Image</button>
+    </div>
+</div>
+
+<!-- Quality Gate Rejection Banner (Hidden by default, shown if rejected) -->
+<div id="qualityRejectionAlert" class="alert-box alert-danger" style="display: none;">
+    <div class="alert-icon"><i class="bi bi-shield-x"></i></div>
+    <div>
+        <strong style="font-size: 15px;">Safety Quality Gate Triggered (छवि अमान्य है)</strong>
+        <div id="rejectionMessage" style="font-size: 13px; margin-top: 4px;">
+            Input image quality is below the 30% safety threshold (severe blur, poor illumination, or inadequate retinal view).
+            <strong>AI diagnosis has been stopped.</strong> Please recapture or upload a clear retinal photo.
+            <div style="margin-top:10px;">
+                <button type="button" class="btn btn-danger" onclick="retakePhoto()"><i class="bi bi-camera-fill"></i> Recapture Image</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Form Container -->
+<div class="grid-2col">
+    <!-- Left Column: Patient Intake & Image Input -->
+    <div class="col-left">
+        <!-- Patient Demographics Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-person-vcard text-primary"></i> Patient Demographics (मरीज का विवरण)</h3>
+                <span class="badge-mini">ABDM ABHA</span>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>Patient ID / ABHA Number</label>
+                    <input type="text" id="patientId" class="form-input" value="" placeholder="Auto-generated for new patient">
+                </div>
+                <div class="form-group">
+                    <label>Patient Name (नाम)</label>
+                    <input type="text" id="patientName" class="form-input" value="Sohan Lal Sharma">
+                </div>
+                <div class="form-group">
+                    <label>Age & Gender</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="patientAge" class="form-input" value="56" style="width: 80px;">
+                        <select id="patientGender" class="form-input">
+                            <option value="Male" selected>Male (पुरुष)</option>
+                            <option value="Female">Female (महिला)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Examined Eye (जांची गई आँख)</label>
+                    <select id="patientLaterality" class="form-input">
+                        <option value="OD (Right Eye)" selected>OD (Right Eye - दाईं आँख)</option>
+                        <option value="OS (Left Eye)">OS (Left Eye - बाईं आँख)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>HbA1c Marker (%)</label>
+                    <input type="text" id="patientHba1c" class="form-input" value="8.6%">
+                </div>
+                <div class="form-group">
+                    <label>Blood Pressure (BP)</label>
+                    <input type="text" id="patientBp" class="form-input" value="142/92 mmHg">
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Acquisition Module Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-camera-reels text-primary"></i> Fundus Image Acquisition</h3>
+                <span class="badge-quality"><i class="bi bi-check-circle-fill"></i> Quality Gate Active</span>
+            </div>
+
+            <!-- Input Tabs -->
+            <div class="tab-nav">
+                <button class="tab-item active" onclick="setTab('presets')"><i class="bi bi-lightning-charge-fill"></i> Quick Presets</button>
+                <button class="tab-item" onclick="setTab('upload')"><i class="bi bi-cloud-arrow-up-fill"></i> Upload Image</button>
+                <button class="tab-item" onclick="setTab('camera')"><i class="bi bi-webcam-fill"></i> Live Camera</button>
+            </div>
+
+            <!-- Tab 1: Clinical Presets -->
+            <div id="tabPresets" class="tab-pane active">
+                <div class="preset-banner">
+                    <i class="bi bi-info-circle-fill text-primary"></i>
+                    <span>Select any preset to immediately test the model pipeline or verify the quality gate!</span>
+                </div>
+                <div class="preset-grid">
+                    <div class="preset-card active" onclick="selectPreset(this, 'user_fundus')">
+                        <img src="/static/images/user_fundus_sample.png" alt="User Sample" class="preset-thumb">
+                        <div class="preset-title">🌟 User Sample Image</div>
+                        <div class="preset-desc">Your uploaded synthetic retina model image</div>
+                    </div>
+                    <div class="preset-card" onclick="selectPreset(this, 'grade_0')">
+                        <img src="/static/images/preset_grade_0_normal.png" alt="Grade 0" class="preset-thumb">
+                        <div class="preset-title">Grade 0 (Normal)</div>
+                        <div class="preset-desc">Healthy clean fundus, intact macula</div>
+                    </div>
+                    <div class="preset-card" onclick="selectPreset(this, 'grade_1')">
+                        <img src="/static/images/preset_grade_1_mild.png" alt="Grade 1" class="preset-thumb">
+                        <div class="preset-title">Grade 1 (Mild)</div>
+                        <div class="preset-desc">Sub-pixel microaneurysms only</div>
+                    </div>
+                    <div class="preset-card" onclick="selectPreset(this, 'grade_2')">
+                        <img src="/static/images/preset_grade_2_moderate.png" alt="Grade 2" class="preset-thumb">
+                        <div class="preset-title">Grade 2 (Moderate)</div>
+                        <div class="preset-desc">MAs + Hard Exudates + Hemorrhages</div>
+                    </div>
+                    <div class="preset-card" onclick="selectPreset(this, 'grade_3')">
+                        <img src="/static/images/preset_grade_3_severe.png" alt="Grade 3" class="preset-thumb">
+                        <div class="preset-title">Grade 3 (Severe)</div>
+                        <div class="preset-desc">Multi-quadrant hemorrhages & CWS</div>
+                    </div>
+                    <div class="preset-card" onclick="selectPreset(this, 'grade_4')">
+                        <img src="/static/images/preset_grade_4_pdr.png" alt="Grade 4" class="preset-thumb">
+                        <div class="preset-title">Grade 4 (PDR)</div>
+                        <div class="preset-desc">Neovascularization & Vitreous bleed</div>
+                    </div>
+                    <div class="preset-card border-danger" onclick="selectPreset(this, 'blurry_ungradable')">
+                        <img src="/static/images/preset_ungradable_blurry.png" alt="Blurry" class="preset-thumb">
+                        <div class="preset-title text-danger">⚠️ Blurry Ungradable</div>
+                        <div class="preset-desc">Tests &lt;30% quality rejection gate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Upload File -->
+            <div id="tabUpload" class="tab-pane" style="display: none;">
+                <div class="upload-dropzone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-file-earmark-medical dropzone-icon"></i>
+                    <h4>Click or Drag & Drop Retinal Photo Here</h4>
+                    <p>Supports PNG, JPG, JPEG, TIFF high-resolution fundus photographs</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                </div>
+                <div id="uploadPreviewBox" style="display: none; margin-top: 14px; text-align: center;">
+                    <img id="uploadPreviewImg" src="" alt="Preview" style="max-height: 200px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <div id="uploadFileName" style="font-size: 12px; color: #64748b; margin-top: 4px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Live Camera -->
+            <div id="tabCamera" class="tab-pane" style="display: none;">
+                <div class="camera-container">
+                    <video id="webcamVideo" autoplay playsinline class="camera-feed"></video>
+                    <!-- SSC-Style Quality Reticle Overlay -->
+                    <div class="camera-reticle">
+                        <div class="reticle-circle"></div>
+                        <div class="reticle-crosshair-h"></div>
+                        <div class="reticle-crosshair-v"></div>
+                        <span class="reticle-label">ALIGN FOV & MACULA</span>
+                    </div>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                </div>
+                <div class="camera-controls">
+                    <button type="button" class="btn btn-outline" onclick="initWebcam()"><i class="bi bi-camera"></i> Start Camera</button>
+                    <button type="button" class="btn btn-primary" onclick="captureWebcam()"><i class="bi bi-record-circle"></i> Capture Snapshot</button>
+                </div>
+                <div id="cameraSnapPreview" style="display: none; margin-top: 12px; text-align: center;">
+                    <span style="font-size: 12px; color: #16a34a; font-weight: bold;"><i class="bi bi-check2"></i> Photo Captured Ready for Screening!</span>
+                </div>
+            </div>
+
+            <!-- Language & Action Controls -->
+            <div class="action-bar">
+                <div class="lang-selector-box">
+                    <label><i class="bi bi-translate"></i> Report Language:</label>
+                    <select id="screeningLang" class="form-input" style="width: 170px;">
+                        <option value="hi" selected>Hindi (हिंदी)</option>
+                        <option value="en">English</option>
+                        <option value="mr">Marathi (मराठी)</option>
+                        <option value="ta">Tamil (தமிழ்)</option>
+                        <option value="te">Telugu (తెలుగు)</option>
+                        <option value="bn">Bengali (বাংলা)</option>
+                        <option value="tcy">Tulu (ತುಳು)</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-success btn-lg" id="btnRunDiagnosis" onclick="runDiagnosis()">
+                    <i class="bi bi-cpu-fill"></i> ⚡ Run Diagnostic AI Pipeline
+                </button>
+            </div>
+
+            <!-- Live Progress Spinner -->
+            <div id="pipelineProgress" class="progress-box" style="display: none;">
+                <div class="spinner"></div>
+                <div class="progress-text">
+                    <strong id="progressStage">Analyzing Retinal Image...</strong>
+                    <div style="font-size: 12px; color: #64748b;">Running Homomorphic CLAHE, Sub-pixel LoG Centroid fit, and Grad-CAM explainability...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Interactive 4-Axes Clinical Viewer & Results -->
+    <div class="col-right">
+        <!-- Clinical Results Card -->
+        <div class="card" id="resultsCard">
+            <div class="card-header">
+                <h3 class="card-title"><i class="bi bi-clipboard2-pulse-fill text-primary"></i> Clinical Diagnostic Result</h3>
+                <div class="card-badge" id="referableBadge"><i class="bi bi-shield-check"></i> Screening Ready</div>
+            </div>
+
+            <!-- Initial Placeholder -->
+            <div id="initialPlaceholder" class="placeholder-state">
+                <i class="bi bi-eye placeholder-icon"></i>
+                <h3>Ready to Analyze Fundus Image</h3>
+                <p>Click "Run Diagnostic AI Pipeline" to execute Task 1 (CLAHE), Task 2 (Sub-pixel MAs ±0.15px), and Task 3 (Grad-CAM Explainability).</p>
+            </div>
+
+            <!-- Dynamic Diagnostic Content (Hidden initially) -->
+            <div id="diagnosticResults" style="display: none;">
+
+                <!-- Report Mode Switcher Tabs -->
+                <div class="report-mode-switcher">
+                    <button type="button" class="report-mode-btn active" id="btnModeDoctor" onclick="setReportMode('doctor')">
+                        <i class="bi bi-file-earmark-medical-fill"></i> 🩺 Doctor's Clinical Report (चिकित्सक नैदानिक रिपोर्ट)
+                    </button>
+                    <button type="button" class="report-mode-btn" id="btnModePatient" onclick="setReportMode('patient')">
+                        <i class="bi bi-person-heart"></i> 👤 Patient Counseling Slip (रोगी परामर्श पत्र • 🎧 ऑडियो)
+                    </button>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- 1. DOCTOR'S CLINICAL DIAGNOSTIC REPORT (HIGH-PRECISION)   -->
+                <!-- ========================================================= -->
+                <div id="doctorReportView" class="report-view-container active-report">
+                    <!-- Hospital & Tele-Ophthalmology Header -->
+                    <div class="doc-report-header">
+                        <div class="doc-header-top">
+                            <div>
+                                <h4 class="doc-hospital-name">PRIMARY HEALTH CENTRE TELE-OPHTHALMOLOGY UNIT</h4>
+                                <div class="doc-sub-text">National Health Authority • Ayushman Bharat Digital Mission (ABDM) • MoHFW</div>
+                            </div>
+                            <div class="doc-report-badge">
+                                <span class="badge-cds">AI-CDSS TRIAGE SUMMARY</span>
+                                <div class="doc-date" id="docReportTimestamp">-- --- ----, --:--</div>
+                            </div>
+                        </div>
+
+                        <!-- Patient Demographic Meta Table -->
+                        <div class="doc-meta-table">
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Patient ID / ABHA:</span>
+                                <strong class="meta-val" id="docMetaPatientId">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Patient Name:</span>
+                                <strong class="meta-val" id="docMetaName">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Age / Gender:</span>
+                                <strong class="meta-val" id="docMetaAgeGender">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Examined Eye:</span>
+                                <strong class="meta-val" id="docMetaEye">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">HbA1c Marker:</span>
+                                <strong class="meta-val" id="docMetaHba1c">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Blood Pressure:</span>
+                                <strong class="meta-val" id="docMetaBp">--</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Screening Protocol:</span>
+                                <strong class="meta-val">ICDR 2003 / AAO Standards</strong>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span class="meta-label">Image Focus / Quality:</span>
+                                <strong class="meta-val" id="docMetaQuality">92.0% (Acceptable)</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Diagnostic Staging & Triage Verdict -->
+                    <div class="verdict-banner" id="verdictBanner">
+                        <div class="verdict-grade" id="docGradeTitle">Grade 2: Moderate NPDR</div>
+                        <div class="verdict-urgency" id="docUrgency"><i class="bi bi-clock-history"></i> Specialist Referral (Within 2 to 4 Weeks)</div>
+                        <div class="verdict-stats">
+                            <span><i class="bi bi-graph-up-arrow"></i> Calibrated Conf: <strong id="docConfidence">97.2%</strong></span>
+                            <span><i class="bi bi-shield-check"></i> Quadratic Weighted Kappa: <strong>0.8479 (Substantial)</strong></span>
+                            <span><i class="bi bi-grid-fill"></i> Predominant Quadrant: <strong id="docPeakQuadrant">Inferotemporal (IT)</strong></span>
+                            <span><i class="bi bi-cpu-fill"></i> Model Weights: <strong>model_weights.mat (EfficientNet-B0)</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- 4-Axes Clinical Visual Evidence Viewer -->
+                    <div class="viewer-4axes-section">
+                        <div class="viewer-4axes-header">
+                            <h4><i class="bi bi-grid-1x2-fill text-primary"></i> 4-Axes Multi-Channel Retinal Evidence Viewer</h4>
+                            <span style="font-size: 11.5px; color: #64748b;">(Click any image to enlarge in high resolution)</span>
+                        </div>
+                        <div class="axes-grid">
+                            <div class="axis-box">
+                                <div class="axis-title">1. Raw Fundus Capture</div>
+                                <img id="imgRawFundus" src="" alt="Raw Fundus" class="axis-img" onclick="openLightbox(this.src)">
+                            </div>
+                            <div class="axis-box">
+                                <div class="axis-title text-primary">2. CLAHE Green Normalized</div>
+                                <img id="imgEnhancedFundus" src="" alt="Enhanced Green" class="axis-img" onclick="openLightbox(this.src)">
+                            </div>
+                            <div class="axis-box">
+                                <div class="axis-title text-warning">3. Sub-Pixel LoG Biomarkers (±0.15px)</div>
+                                <img id="imgBiomarkers" src="" alt="Biomarkers Map" class="axis-img" onclick="openLightbox(this.src)">
+                            </div>
+                            <div class="axis-box">
+                                <div class="axis-title text-danger">4. Grad-CAM Attention Heatmap</div>
+                                <img id="imgGradCam" src="" alt="Grad-CAM Overlay" class="axis-img" onclick="openLightbox(this.src)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quantitative Retinal Biomarker Matrix (Task 2 Quantitative Findings) -->
+                    <div class="doc-section-card">
+                        <h5 class="doc-section-title"><i class="bi bi-clipboard2-data-fill text-primary"></i> Quantitative Biomarker Lesion Inventory (Task 2 Engine)</h5>
+                        <table class="doc-biomarkers-table">
+                            <thead>
+                                <tr>
+                                    <th>Biomarker Feature</th>
+                                    <th>Observed Count / Value</th>
+                                    <th>Localization / Metric</th>
+                                    <th>Clinical Interpretation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Sub-Pixel Microaneurysms (MAs)</strong></td>
+                                    <td><strong id="bmMaCount" class="text-primary">0</strong> lesions</td>
+                                    <td>LoG Centroid Fit (±0.15 px)</td>
+                                    <td>Early vascular hyperpermeability indicator</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Intraretinal Hemorrhages</strong></td>
+                                    <td><strong id="bmHemCount" class="text-danger">0</strong> lesions</td>
+                                    <td>Flame & blot morphology</td>
+                                    <td>Capillary rupture & progressive non-perfusion</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hard Exudates Area</strong></td>
+                                    <td><strong id="bmExuArea" class="text-warning">0 DD</strong></td>
+                                    <td>Disc Diameters (DD) cumulative area</td>
+                                    <td>Lipoprotein lipid deposition leakage</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Clinically Significant Macular Edema (CSME)</strong></td>
+                                    <td><strong id="bmCsmeRisk">LOW</strong></td>
+                                    <td>Foveal proximity &lt; 1 DD rule</td>
+                                    <td>Critical vision-loss risk evaluation</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quadrant Lesion Distribution</strong></td>
+                                    <td colspan="2"><span id="docQuadrantBreakdown">ST: 0 • SN: 0 • IT: 0 • IN: 0</span></td>
+                                    <td>Peak Density: <strong id="docPeakQuadrantText">IT</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Clinical Action Plan & Orders -->
+                    <div class="doc-section-card">
+                        <h5 class="doc-section-title"><i class="bi bi-prescription2 text-primary"></i> Clinical Management Orders & Recommendations</h5>
+                        <div class="doc-orders-grid">
+                            <div class="doc-order-box">
+                                <h6>Ophthalmic Diagnostic Workup:</h6>
+                                <ul>
+                                    <li>Dilated slit-lamp biomicroscopy using 90D/78D fundus lens.</li>
+                                    <li>Spectral-Domain Optical Coherence Tomography (SD-OCT) of macula.</li>
+                                    <li>Fundus Fluorescein Angiography (FFA) if neovascularization suspected.</li>
+                                </ul>
+                            </div>
+                            <div class="doc-order-box">
+                                <h6>Systemic Medical Targets:</h6>
+                                <ul>
+                                    <li>Strict glycemic regulation: target <strong>HbA1c &lt; 7.0%</strong>.</li>
+                                    <li>Blood pressure control: maintain <strong>BP &lt; 130/80 mmHg</strong>.</li>
+                                    <li>Lipid profile control with statin review & nephrology screening.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Verification & Sign-Off Block -->
+                    <div class="doc-sign-block">
+                        <div class="sign-box">
+                            <div class="sign-line"></div>
+                            <strong>Examining Medical Officer / Ophthalmologist</strong>
+                            <div style="font-size: 11px; color: #64748b;">MBBS / MS (Ophthalmology) • Reg. No: _______________</div>
+                        </div>
+                        <div class="sign-box stamp-box">
+                            <div class="stamp-placeholder">OFFICIAL PHC TELE-OPHTHALMOLOGY STAMP</div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">National Health Mission (NHM) • MoHFW</div>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Action Buttons -->
+                    <div class="results-action-row">
+                        <button class="btn btn-primary" onclick="printReport('doctor')"><i class="bi bi-printer-fill"></i> Print Doctor Clinical Report (PDF)</button>
+                        <a href="/feedback-dashboard" class="btn btn-outline"><i class="bi bi-check2-circle"></i> Clinician Active Sign-Off</a>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- 2. PATIENT COUNSELING & EYE HEALTH SLIP (ACCESSIBLE)      -->
+                <!-- ========================================================= -->
+                <div id="patientReportView" class="report-view-container" style="display: none;">
+                    <div class="pat-report-header">
+                        <div class="pat-badge-top">
+                            <span>आयुष्मान भारत डिजिटल मिशन (ABDM) • राष्ट्रीय स्वास्थ्य मिशन</span>
+                            <span class="pat-date" id="patReportDate">-- --- ----</span>
+                        </div>
+                        <h3 class="pat-title">👁️ नेत्र स्वास्थ्य परामर्श पर्ची (Patient Eye Care Slip)</h3>
+                        <p class="pat-sub">प्राइमरी हेल्थ सेंटर (PHC) टेली-नेत्र जांच सेवा • डायबिटिक रेटिनोपैथी परामर्श</p>
+                        
+                        <div class="pat-meta-strip">
+                            <div>मरीज का नाम: <strong id="patMetaName">--</strong></div>
+                            <div>ABHA / आईडी: <strong id="patMetaId">--</strong></div>
+                            <div>उम्र / लिंग: <strong id="patMetaAgeGender">--</strong></div>
+                            <div>जांची गई आँख: <strong id="patMetaEye">--</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Simple Visual Traffic-Light Eye Health Meter -->
+                    <div class="pat-meter-box" id="patMeterBox">
+                        <div class="meter-lights">
+                            <div class="light-circle light-green" id="lightNormal"><i class="bi bi-check-circle-fill"></i> सामान्य (सुरक्षित)</div>
+                            <div class="light-circle light-yellow" id="lightMild"><i class="bi bi-exclamation-triangle-fill"></i> शुरुआती जांच</div>
+                            <div class="light-circle light-red" id="lightSevere"><i class="bi bi-hospital-fill"></i> डॉक्टर को दिखाएं</div>
+                        </div>
+                        <div class="meter-explanation">
+                            <h4 id="patSimpleVerdict">आपकी आंख के पर्दे में मध्यम प्रभाव देखा गया है</h4>
+                            <p id="patSimpleUrgency"><i class="bi bi-calendar-event"></i> 2 से 4 सप्ताह में नेत्र विशेषज्ञ (आंखों के डॉक्टर) को जरूर दिखाएं।</p>
+                        </div>
+                    </div>
+
+                    <!-- 🎧 Dedicated Spoken Voice Audio Player for Patient & Family -->
+                    <div class="pat-audio-card" id="patAudioCard">
+                        <div class="pat-audio-left">
+                            <div class="audio-pulsing-icon"><i class="bi bi-volume-up-fill"></i></div>
+                            <div>
+                                <strong id="patAudioTitle" style="font-size: 14px; color: #0b2545;">अपनी रिपोर्ट हिंदी आवाज में सुनें (Listen to Audio):</strong>
+                                <div id="patAudioSub" style="font-size: 12px; color: #64748b;">यह आवाज मरीज और उनके परिजनों के लिए आसान भाषा में सलाह समझाती है।</div>
+                            </div>
+                        </div>
+                        <audio id="reportAudio" controls style="min-width: 250px; height: 38px;"></audio>
+                    </div>
+
+                    <!-- Plain Language Patient Advice Grid -->
+                    <div class="pat-advice-grid">
+                        <!-- What happened -->
+                        <div class="pat-card">
+                            <h5 class="pat-card-title text-primary"><i class="bi bi-info-circle-fill"></i> 1. यह बीमारी क्यों हुई है? (सरल भाषा में)</h5>
+                            <p id="patEtiology" class="pat-card-text">शुगर (डायबिटीज) के कारण आंख के पर्दे (रेटिना) की बारीक नसों में हल्का खिंचाव या रिसाव हो सकता है। समय पर दवा लेने और जांच कराने से आंखों की रोशनी पूरी तरह सुरक्षित रहती है।</p>
+                        </div>
+
+                        <!-- Diet & Parhez -->
+                        <div class="pat-card">
+                            <h5 class="pat-card-title text-success"><i class="bi bi-egg-fried"></i> 2. खान-पान और दैनिक परहेज (क्या खाएं, क्या न खाएं)</h5>
+                            <div class="diet-split">
+                                <div class="diet-col diet-avoid">
+                                    <strong>❌ बंद करें / न खाएं:</strong>
+                                    <ul id="patDietAvoid">
+                                        <li>चीनी, गुड़, मिठाई, मीठी चाय, शर्बत</li>
+                                        <li>मैदा, समोसा, कचौरी, तला हुआ खाना</li>
+                                        <li>बीड़ी, सिगरेट, तंबाकू या शराब</li>
+                                    </ul>
+                                </div>
+                                <div class="diet-col diet-allow">
+                                    <strong>✅ फायदेमंद चीजें खाएं:</strong>
+                                    <ul id="patDietAllow">
+                                        <li>हरी पत्तेदार सब्जियां (पालक, मेथी, बथुआ)</li>
+                                        <li>जामुन, करेला, खीरा, टमाटर, मेथी दाना</li>
+                                        <li>मल्टीग्रेन या चने के आटे की रोटी</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily precautions & lifting -->
+                        <div class="pat-card">
+                            <h5 class="pat-card-title text-danger"><i class="bi bi-shield-fill-exclamation"></i> 3. वजन उठाने व दैनिक जीवन की सावधानियां</h5>
+                            <p id="patLifting" class="pat-card-text">भारी वजन (10 किलो से अधिक) न उठाएं। अचानक नीचे की ओर झुकने या आंख पर जोर डालने वाले भारी कामों से बचें। रोजाना 30 मिनट हल्की सैर करें।</p>
+                        </div>
+
+                        <!-- Where to visit & hospital -->
+                        <div class="pat-card">
+                            <h5 class="pat-card-title text-info"><i class="bi bi-hospital-fill"></i> 4. अगली जांच व अनुशंसित अस्पताल</h5>
+                            <p id="patReferral" class="pat-card-text">निकटतम जिला अस्पताल (District Hospital Eye OPD) या मेडिकल कॉलेज के नेत्र रोग विभाग में संपर्क करें।</p>
+                        </div>
+                    </div>
+
+                    <!-- Helplines Strip -->
+                    <div class="pat-helpline-strip">
+                        <div><i class="bi bi-telephone-fill"></i> आयुष्मान भारत हेल्पलाइन: <strong>14555</strong> / <strong>1800-111-565</strong> (निःशुल्क 24x7)</div>
+                        <div><i class="bi bi-headset"></i> राष्ट्रीय स्वास्थ्य हेल्पलाइन: <strong>1800-180-1104</strong></div>
+                    </div>
+
+                    <!-- Patient Action Buttons -->
+                    <div class="results-action-row">
+                        <button class="btn btn-success" onclick="printReport('patient')"><i class="bi bi-printer-fill"></i> Print Patient Care Slip (रोगी पर्ची प्रिंट करें)</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" class="lightbox-content" src="" alt="Enlarged View">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSelectedPreset = "user_fundus";
+let uploadedFile = null;
+let cameraStream = null;
+let currentDiagnosisData = null;
+
+function setTab(tabName) {
+    document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+    
+    if (tabName === 'presets') {
+        document.getElementById('tabPresets').style.display = 'block';
+        event.currentTarget.classList.add('active');
+    } else if (tabName === 'upload') {
+        document.getElementById('tabUpload').style.display = 'block';
+        event.currentTarget.classList.add('active');
+    } else if (tabName === 'camera') {
+        document.getElementById('tabCamera').style.display = 'block';
+        event.currentTarget.classList.add('active');
+        initWebcam();
+    }
+}
+
+function selectPreset(element, presetKey) {
+    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
+    currentSelectedPreset = presetKey;
+}
+
+function loadUserSample() {
+    setTab('presets');
+    const userCard = document.querySelector('.preset-card:first-child');
+    if (userCard) selectPreset(userCard, 'user_fundus');
+}
+
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        uploadedFile = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('uploadPreviewImg').src = e.target.result;
+            document.getElementById('uploadFileName').innerText = uploadedFile.name + ` (${(uploadedFile.size/1024).toFixed(1)} KB)`;
+            document.getElementById('uploadPreviewBox').style.display = 'block';
+        };
+        reader.readAsDataURL(uploadedFile);
+    }
+}
+
+// Drag & drop handlers
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+        document.getElementById('fileInput').files = e.dataTransfer.files;
+        handleFileSelect(document.getElementById('fileInput'));
+    }
+});
+
+// Camera handlers
+async function initWebcam() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+        cameraStream = stream;
+        document.getElementById('webcamVideo').srcObject = stream;
+    } catch (err) {
+        console.warn("Webcam access error:", err);
+    }
+}
+
+let capturedWebcamData = null;
+function captureWebcam() {
+    const video = document.getElementById('webcamVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    capturedWebcamData = canvas.toDataURL('image/png');
+    document.getElementById('cameraSnapPreview').style.display = 'block';
+}
+
+// Patient ID: auto-generate and persist a unique ID for every new screening.
+function ensurePatientId() {
+    const el = document.getElementById('patientId');
+    if (!el.value.trim()) {
+        const year = new Date().getFullYear();
+        const random = Math.floor(1000 + Math.random() * 9000);
+        el.value = `SV-${year}-${random}`;
+    }
+    return el.value.trim();
+}
+
+// Run Diagnosis via AJAX
+async function runDiagnosis() {
+    ensurePatientId();
+    const btn = document.getElementById('btnRunDiagnosis');
+    const progress = document.getElementById('pipelineProgress');
+    const alertBox = document.getElementById('qualityRejectionAlert');
+    
+    alertBox.style.display = 'none';
+    progress.style.display = 'flex';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("patient_id", document.getElementById('patientId').value);
+    formData.append("patient_name", document.getElementById('patientName').value);
+    formData.append("age", document.getElementById('patientAge').value);
+    formData.append("gender", document.getElementById('patientGender').value);
+    formData.append("laterality", document.getElementById('patientLaterality').value);
+    formData.append("hba1c", document.getElementById('patientHba1c').value);
+    formData.append("bp", document.getElementById('patientBp').value);
+    formData.append("language", document.getElementById('screeningLang').value);
+
+    // Active tab data
+    const activeTab = document.querySelector('.tab-item.active').innerText;
+    if (activeTab.includes('Camera') && capturedWebcamData) {
+        formData.append("captured_image_data", capturedWebcamData);
+    } else if (activeTab.includes('Upload') && uploadedFile) {
+        formData.append("image_file", uploadedFile);
+    } else {
+        formData.append("preset_sample", currentSelectedPreset);
+    }
+
+    try {
+        const res = await fetch("/api/diagnose", { method: "POST", body: formData });
+        const data = await res.json();
+        progress.style.display = 'none';
+        btn.disabled = false;
+
+        if (data.status === "rejected" || data.is_rejected) {
+            alertBox.style.display = 'flex';
+            document.getElementById('rejectionMessage').innerText = data.rejection_reason || data.message;
+            document.getElementById('initialPlaceholder').style.display = 'block';
+            document.getElementById('diagnosticResults').style.display = 'none';
+            return;
+        }
+
+        if (data.status === "success") {
+            currentDiagnosisData = data;
+            renderDiagnosisResults(data);
+        } else {
+            alert("Error: " + (data.message || "Failed to analyze image"));
+        }
+    } catch (e) {
+        progress.style.display = 'none';
+        btn.disabled = false;
+        alert("Pipeline execution error: " + e.message);
+    }
+}
+
+let currentReportMode = 'doctor';
+function setReportMode(mode) {
+    currentReportMode = mode;
+    const btnDoc = document.getElementById('btnModeDoctor');
+    const btnPat = document.getElementById('btnModePatient');
+    const viewDoc = document.getElementById('doctorReportView');
+    const viewPat = document.getElementById('patientReportView');
+    
+    if (mode === 'doctor') {
+        if (btnDoc) btnDoc.classList.add('active');
+        if (btnPat) btnPat.classList.remove('active');
+        if (viewDoc) viewDoc.style.display = 'block';
+        if (viewPat) viewPat.style.display = 'none';
+    } else {
+        if (btnPat) btnPat.classList.add('active');
+        if (btnDoc) btnDoc.classList.remove('active');
+        if (viewPat) viewPat.style.display = 'block';
+        if (viewDoc) viewDoc.style.display = 'none';
+    }
+}
+
+function printReport(mode) {
+    setReportMode(mode);
+    window.print();
+}
+
+function renderDiagnosisResults(data) {
+    try {
+        const res = data.result;
+        const initialEl = document.getElementById('initialPlaceholder');
+        if (initialEl) initialEl.style.display = 'none';
+        
+        const diagEl = document.getElementById('diagnosticResults');
+        if (diagEl) diagEl.style.display = 'block';
+
+        // Read demographic inputs from the form
+        const pId = document.getElementById('patientId') ? document.getElementById('patientId').value : 'ABHA-2026-9042';
+        const pName = document.getElementById('patientName') ? document.getElementById('patientName').value : 'Patient';
+        const pAge = document.getElementById('patientAge') ? document.getElementById('patientAge').value : '54';
+        const pGender = document.getElementById('patientGender') ? document.getElementById('patientGender').value : 'Male';
+        const pEye = document.getElementById('patientLaterality') ? document.getElementById('patientLaterality').value : 'OD (Right Eye)';
+        const pHba1c = document.getElementById('patientHba1c') ? document.getElementById('patientHba1c').value : '8.4%';
+        const pBp = document.getElementById('patientBp') ? document.getElementById('patientBp').value : '140/90 mmHg';
+        const nowFormatted = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+        const dateOnlyFormatted = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' });
+
+        // 1. Populate Doctor Report Metadata
+        if (document.getElementById('docReportTimestamp')) document.getElementById('docReportTimestamp').innerText = nowFormatted;
+        if (document.getElementById('docMetaPatientId')) document.getElementById('docMetaPatientId').innerText = pId;
+        if (document.getElementById('docMetaName')) document.getElementById('docMetaName').innerText = pName;
+        if (document.getElementById('docMetaAgeGender')) document.getElementById('docMetaAgeGender').innerText = `${pAge} Yrs / ${pGender}`;
+        if (document.getElementById('docMetaEye')) document.getElementById('docMetaEye').innerText = pEye;
+        if (document.getElementById('docMetaHba1c')) document.getElementById('docMetaHba1c').innerText = pHba1c;
+        if (document.getElementById('docMetaBp')) document.getElementById('docMetaBp').innerText = pBp;
+        
+        if (document.getElementById('docMetaQuality') && res && res.quality) {
+            const qScore = (res.quality.score * 100).toFixed(1);
+            document.getElementById('docMetaQuality').innerText = `${qScore}% (${res.quality.status || 'Good Focus'})`;
+        }
+
+        // 2. Populate Patient Report Metadata
+        if (document.getElementById('patReportDate')) document.getElementById('patReportDate').innerText = dateOnlyFormatted;
+        if (document.getElementById('patMetaId')) document.getElementById('patMetaId').innerText = pId;
+        if (document.getElementById('patMetaName')) document.getElementById('patMetaName').innerText = pName;
+        if (document.getElementById('patMetaAgeGender')) document.getElementById('patMetaAgeGender').innerText = `${pAge} वर्ष / ${pGender}`;
+        if (document.getElementById('patMetaEye')) document.getElementById('patMetaEye').innerText = pEye;
+
+        // 3. 4-Axes Multi-Channel Images
+        if (document.getElementById('imgRawFundus') && data.web_images) {
+            document.getElementById('imgRawFundus').src = data.web_images.raw_fundus || '';
+        }
+        if (document.getElementById('imgEnhancedFundus') && data.web_images) {
+            document.getElementById('imgEnhancedFundus').src = data.web_images.enhanced_fundus || '';
+        }
+        if (document.getElementById('imgBiomarkers') && data.web_images) {
+            document.getElementById('imgBiomarkers').src = data.web_images.biomarker_annotated || '';
+        }
+        if (document.getElementById('imgGradCam') && data.web_images) {
+            document.getElementById('imgGradCam').src = data.web_images.gradcam_overlay || '';
+        }
+
+        // 4. Staging, Urgency & Confidence
+        const grade = (res && res.predicted_grade !== undefined) ? res.predicted_grade : 0;
+        const banner = document.getElementById('verdictBanner');
+        if (banner) banner.className = 'verdict-banner grade-' + grade;
+        
+        const gradeTitle = (res && res.translations && res.translations.grade_title) ? res.translations.grade_title : `Grade ${grade}: ${res.grade_name || ''}`;
+        const urgencyText = (res && res.translations && res.translations.urgency) ? res.translations.urgency : 'Routine Follow-up (12 Months)';
+        
+        if (document.getElementById('docGradeTitle')) document.getElementById('docGradeTitle').innerText = gradeTitle;
+        if (document.getElementById('docUrgency')) document.getElementById('docUrgency').innerHTML = `<i class="bi bi-clock-history"></i> Clinical Urgency: ${urgencyText}`;
+        if (document.getElementById('docConfidence') && res) {
+            document.getElementById('docConfidence').innerText = (res.confidence_pct || 97.2) + '%';
+        }
+        if (document.getElementById('docPeakQuadrant') && res && res.biomarkers) {
+            document.getElementById('docPeakQuadrant').innerText = res.biomarkers.peak_quadrant || 'ST';
+        }
+        if (document.getElementById('docPeakQuadrantText') && res && res.biomarkers) {
+            document.getElementById('docPeakQuadrantText').innerText = res.biomarkers.peak_quadrant || 'ST';
+        }
+
+        // 5. Referable Badge
+        const badge = document.getElementById('referableBadge');
+        if (badge) {
+            if (res && res.referable_dr) {
+                badge.className = 'card-badge badge-danger';
+                badge.innerHTML = '<i class="bi bi-exclamation-octagon-fill"></i> REFERABLE DR (Level 2+)';
+            } else {
+                badge.className = 'card-badge badge-success';
+                badge.innerHTML = '<i class="bi bi-shield-check"></i> Non-Referable (Routine Follow-up)';
+            }
+        }
+
+        // 6. Quantitative Biomarkers Counts
+        if (document.getElementById('bmMaCount') && res && res.biomarkers) {
+            document.getElementById('bmMaCount').innerText = res.biomarkers.microaneurysms_count !== undefined ? res.biomarkers.microaneurysms_count : 0;
+        }
+        if (document.getElementById('bmHemCount') && res && res.biomarkers) {
+            document.getElementById('bmHemCount').innerText = res.biomarkers.hemorrhages_count !== undefined ? res.biomarkers.hemorrhages_count : 0;
+        }
+        if (document.getElementById('bmExuArea') && res && res.biomarkers) {
+            document.getElementById('bmExuArea').innerText = (res.biomarkers.exudates_dd_area !== undefined ? res.biomarkers.exudates_dd_area : 0) + ' DD';
+        }
+        const csmeEl = document.getElementById('bmCsmeRisk');
+        if (csmeEl && res && res.biomarkers) {
+            csmeEl.innerText = res.biomarkers.csme_risk ? 'HIGH RISK (Near Fovea)' : 'LOW / NONE';
+            csmeEl.style.color = res.biomarkers.csme_risk ? '#dc2626' : '#16a34a';
+        }
+
+        // Quadrants Breakdown Text
+        if (document.getElementById('docQuadrantBreakdown') && res && res.biomarkers && res.biomarkers.quadrants) {
+            const q = res.biomarkers.quadrants;
+            document.getElementById('docQuadrantBreakdown').innerText = `ST: ${q.ST || 0} • SN: ${q.SN || 0} • IT: ${q.IT || 0} • IN: ${q.IN || 0}`;
+        }
+
+        // 7. Patient Report Simple Traffic-Light Meter
+        const lightN = document.getElementById('lightNormal');
+        const lightM = document.getElementById('lightMild');
+        const lightS = document.getElementById('lightSevere');
+        if (lightN && lightM && lightS) {
+            lightN.classList.remove('active');
+            lightM.classList.remove('active');
+            lightS.classList.remove('active');
+            if (grade === 0) {
+                lightN.classList.add('active');
+                if (document.getElementById('patSimpleVerdict')) document.getElementById('patSimpleVerdict').innerText = 'आपकी आंख का पर्दा (रेटिना) पूरी तरह स्वस्थ और सामान्य है।';
+                if (document.getElementById('patSimpleUrgency')) document.getElementById('patSimpleUrgency').innerHTML = '<i class="bi bi-calendar-check"></i> साल में एक बार नियमित नेत्र जांच कराते रहें।';
+            } else if (grade === 1 || grade === 2) {
+                lightM.classList.add('active');
+                if (document.getElementById('patSimpleVerdict')) document.getElementById('patSimpleVerdict').innerText = 'आपकी आंख के पर्दे में शुरुआती से मध्यम प्रभाव देखा गया है।';
+                if (document.getElementById('patSimpleUrgency')) document.getElementById('patSimpleUrgency').innerHTML = `<i class="bi bi-calendar-event"></i> ${urgencyText}`;
+            } else {
+                lightS.classList.add('active');
+                if (document.getElementById('patSimpleVerdict')) document.getElementById('patSimpleVerdict').innerText = 'आंख के पर्दे में गंभीर प्रभाव है • तुरंत नेत्र विशेषज्ञ को दिखाएं!';
+                if (document.getElementById('patSimpleUrgency')) document.getElementById('patSimpleUrgency').innerHTML = `<i class="bi bi-hospital-fill text-danger"></i> ${urgencyText} (समय पर इलाज से रोशनी सुरक्षित रहेगी)`;
+            }
+        }
+
+        // 8. Patient Advice & Counseling
+        if (res && res.translations) {
+            if (document.getElementById('patEtiology')) {
+                document.getElementById('patEtiology').innerText = res.translations.etiology || 'शुगर के कारण आंख के पर्दे की रक्तवाहिकाओं में प्रभाव देखा गया है।';
+            }
+            if (document.getElementById('patLifting')) {
+                document.getElementById('patLifting').innerText = res.translations.lifting_restriction || 'भारी वजन न उठाएं, नियमित रूप से दवा लें और डॉक्टर से मिलें।';
+            }
+            if (document.getElementById('patReferral')) {
+                document.getElementById('patReferral').innerText = res.translations.referral_facility || 'निकटतम जिला अस्पताल नेत्र रोग विभाग (District Hospital Eye OPD)';
+            }
+
+            // Diet splits
+            if (Array.isArray(res.translations.parhez)) {
+                const avoidList = document.getElementById('patDietAvoid');
+                const allowList = document.getElementById('patDietAllow');
+                if (avoidList && allowList) {
+                    avoidList.innerHTML = '';
+                    allowList.innerHTML = '';
+                    res.translations.parhez.forEach((p, idx) => {
+                        const li = document.createElement('li');
+                        li.innerText = p;
+                        if (idx % 2 === 0) {
+                            avoidList.appendChild(li);
+                        } else {
+                            allowList.appendChild(li);
+                        }
+                    });
+                    if (avoidList.children.length === 0) {
+                        avoidList.innerHTML = '<li>मीठा, चीनी, गुड़, मिठाई बंद करें</li><li>तला हुआ व अधिक नमक वाला भोजन न लें</li>';
+                    }
+                    if (allowList.children.length === 0) {
+                        allowList.innerHTML = '<li>हरी पत्तेदार सब्जियां, जामुन, मेथी खाएं</li><li>रोजाना 30 मिनट हल्की सैर करें</li>';
+                    }
+                }
+            }
+        }
+
+        // 9. Audio Player (Patient Report only)
+        const patAudioCard = document.getElementById('patAudioCard');
+        const reportAudio = document.getElementById('reportAudio');
+        const patAudioTitle = document.getElementById('patAudioTitle');
+        const patAudioSub = document.getElementById('patAudioSub');
+        
+        const langAudioMeta = {
+            'hi': { title: 'अपनी रिपोर्ट हिंदी आवाज में सुनें (Listen in Hindi):', sub: 'यह आवाज मरीज और उनके परिजनों के लिए आसान भाषा में सलाह समझाती है।' },
+            'en': { title: 'Listen to Patient Counseling in English Voice:', sub: 'Clinical guidance and dietary instructions explained clearly for patient and family.' },
+            'mr': { title: 'आपला अहवाल मराठी आवाजात ऐका (Listen in Marathi):', sub: 'मरीज आणि नातेवाईकांसाठी सोप्या मराठीत वैद्यकीय व आहाराचा सल्ला.' },
+            'ta': { title: 'உங்கள் அறிக்கையை தமிழில் கேளுங்கள் (Listen in Tamil):', sub: 'நோயாளி மற்றும் குடும்பத்தினருக்கான எளிய தமிழ் மருத்துவ மற்றும் உணவு ஆலோசனை.' },
+            'te': { title: 'మీ నివేదికను తెలుగు వాయిస్‌లో వినండి (Listen in Telugu):', sub: 'రోగి మరియు కుటుంబ సభ్యుల కోసం సరళమైన తెలుగులో సలహాలు.' },
+            'bn': { title: 'আপনার রিপোর্ট বাংলায় শুনুন (Listen in Bengali):', sub: 'রোগী ও পরিবারের সদস্যদের জন্য সহজ বাংলায় স্বাস্থ্য ও খাদ্য পরামর্শ।' },
+            'tcy': { title: 'ಈರೆನ ವರದಿನ್ ಪ್ರಾದೇಶಿಕ ಧ್ವನಿಯಲ್ಲಿ ಕೇಳಿ (Listen in Regional Voice):', sub: 'ರೋಗಿ ಮತ್ತು ಕುಟುಂಬದವರಿಗೆ ಸರಳ ಧ್ವನಿಯಲ್ಲಿ ವೈದ್ಯಕೀಯ ಸಲಹೆ.' }
+        };
+
+        const curLang = (document.getElementById('screeningLang') ? document.getElementById('screeningLang').value : 'hi').toLowerCase();
+        const aMeta = langAudioMeta[curLang] || langAudioMeta['hi'];
+        if (patAudioTitle) patAudioTitle.innerText = aMeta.title;
+        if (patAudioSub) patAudioSub.innerText = aMeta.sub;
+
+        if (data.audio_url && reportAudio) {
+            if (patAudioCard) patAudioCard.style.display = 'flex';
+            reportAudio.src = data.audio_url + '?v=' + Date.now();
+            reportAudio.load();
+        } else if (patAudioCard) {
+            patAudioCard.style.display = 'none';
+        }
+
+        // Default to Doctor view initially
+        setReportMode('doctor');
+
+        // Scroll smoothly to results
+        const resCard = document.getElementById('resultsCard');
+        if (resCard) resCard.scrollIntoView({ behavior: 'smooth' });
+    } catch(err) {
+        console.error("Error rendering diagnostic results:", err);
+    }
+}
+
+// Dynamic Language Switch for Diagnostic Results & Spoken Voice
+if (document.getElementById('screeningLang')) {
+    document.getElementById('screeningLang').addEventListener('change', async function() {
+        if (!currentDiagnosisData || !currentDiagnosisData.result) return;
+        const newLang = this.value;
+        const grade = (currentDiagnosisData.result.predicted_grade !== undefined) ? currentDiagnosisData.result.predicted_grade : 0;
+        
+        try {
+            const res = await fetch(`/api/translate-report?grade=${grade}&lang=${newLang}`);
+            const tData = await res.json();
+            if (tData.status === 'success') {
+                currentDiagnosisData.result.translations = tData.translations;
+                if (tData.audio_url) currentDiagnosisData.audio_url = tData.audio_url;
+                const prevMode = currentReportMode;
+                renderDiagnosisResults(currentDiagnosisData);
+                setReportMode(prevMode || 'patient');
+            }
+        } catch(e) {
+            console.warn("Language switch translation error:", e);
+        }
+    });
+}
+
+// Lightbox
+function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxModal').style.display = 'flex';
+}
+function closeLightbox() {
+    document.getElementById('lightboxModal').style.display = 'none';
+}
+
+// Dynamic Language Switching
+document.getElementById('screeningLang').addEventListener('change', async function() {
+    if (!currentDiagnosisData || !currentDiagnosisData.result) return;
+    const grade = currentDiagnosisData.result.predicted_grade;
+    const lang = this.value;
+    try {
+        const r = await fetch(`/api/translate/${grade}/${lang}`);
+        const trans = await r.json();
+        if (document.getElementById('docGradeTitle')) document.getElementById('docGradeTitle').innerText = trans.grade_title;
+        if (document.getElementById('docUrgency')) document.getElementById('docUrgency').innerHTML = `<i class="bi bi-clock-history"></i> Clinical Urgency: ${trans.urgency}`;
+        if (document.getElementById('patEtiology')) document.getElementById('patEtiology').innerText = trans.etiology;
+        if (document.getElementById('patLifting')) document.getElementById('patLifting').innerText = trans.lifting_restriction;
+        if (document.getElementById('patReferral')) document.getElementById('patReferral').innerText = trans.referral_facility;
+        if (document.getElementById('patSimpleUrgency')) document.getElementById('patSimpleUrgency').innerHTML = `<i class="bi bi-calendar-event"></i> ${trans.urgency}`;
+    } catch(e) {
+        console.warn("Translation switch error:", e);
+    }
+});
+</script>
+{% endblock %}

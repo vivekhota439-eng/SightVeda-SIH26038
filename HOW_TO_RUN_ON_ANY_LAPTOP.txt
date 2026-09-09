@@ -1,0 +1,54 @@
+================================================================================
+  SIGHTVEDA • NATIONAL TELE-OPHTHALMOLOGY CLINICAL AI PORTAL (SIH26038)
+  Ayushman Bharat Digital Mission (ABDM) • Ministry of Health & Family Welfare
+================================================================================
+
+[HINDI INSTRUCTIONS / हिन्दी में निर्देश]
+--------------------------------------------------------------------------------
+किसी भी दूसरे लैपटॉप (Any Other Laptop) पर इस वेबसाइट को चलाने का सबसे आसान तरीका:
+
+चरण 1: इस ZIP फ़ाइल (SIH26038_Diabetic_Retinopathy_Web_Portal.zip) को किसी भी फोल्डर
+       (जैसे Desktop या Downloads) में Extract (Unzip) करें।
+
+चरण 2: अनज़िप किए गए फोल्डर को खोलें और 'run_website.bat' फ़ाइल पर Double-Click करें।
+       (यह बैच फ़ाइल अपने आप Python को डिटेक्ट करेगी, ज़रूरी लाइब्रेरीज़ इनस्टॉल करेगी,
+       और आपके ब्राउज़र में http://127.0.0.1:5000 को खोल देगी!)
+
+चरण 3: अगर उस लैपटॉप में Python इनस्टॉल नहीं है:
+       - https://www.python.org/downloads/ पर जाएं और Python (3.9 से 3.12 तक) डाउनलोड करें।
+       - इनस्टॉल करते समय नीचे 'Add Python to PATH' बॉक्स को ज़रूर टिक (Check) करें।
+       - फिर दोबारा 'run_website.bat' पर डबल-क्लिक करें। काम पूरा!
+
+
+[ENGLISH INSTRUCTIONS]
+--------------------------------------------------------------------------------
+HOW TO RUN ON ANY LAPTOP / PC:
+
+Step 1: Extract (Unzip) this entire folder to your Desktop or preferred folder.
+
+Step 2: Double-click 'run_website.bat'.
+        The script will:
+        - Automatically detect your current directory (works anywhere)
+        - Check if Python is installed
+        - Automatically install required packages (Flask, NumPy, OpenCV, SciPy, H5Py)
+        - Start the server on http://127.0.0.1:5000
+        - Automatically open your default web browser!
+
+Step 3 (Manual Option if preferred):
+        Open Command Prompt (CMD) in this folder and run:
+        1. pip install -r requirements.txt
+        2. python app.py
+        3. Open your browser and go to: http://127.0.0.1:5000
+
+
+KEY FEATURES READY IN THIS PORTAL:
+- Official Government of India & Ayushman Bharat PM-JAY Branding (NIC/GIGW Standard)
+- Live Indian Standard Time (IST Asia/Kolkata) clock with seconds
+- Real trained EfficientNet weights: models/model_weights.mat
+- 4,293-sample validation matrix / prototype benchmark suite: models/validation_results.mat
+- 4-Axes Clinical Viewer (Raw, CLAHE, Sub-Pixel LoG +/-0.15px, Grad-CAM Overlay)
+- 7 Indian Languages Clinical CDS Report Narration (Hindi, English, Marathi, Tamil, Telugu, Bengali, Kannada)
+- 35 Pre-cached Regional Audio MP3 files in outputs/ (Works instantly even with slow/no internet)
+- 100,000 Patient District Telemedicine Simulator across 35 PHCs
+- 1-Click Double-Click Launcher (run_website.bat) for any Windows laptop
+================================================================================

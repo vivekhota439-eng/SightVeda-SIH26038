@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Model Validation & Benchmarks • SIH26038{% endblock %}
+
+{% block content %}
+<!-- Page Title Row -->
+<div class="page-title-row">
+    <div>
+        <h1 class="page-title"><i class="bi bi-patch-check-fill text-success"></i> Clinical Model Validation & Benchmark Suite</h1>
+        <div class="page-subtitle">Integrated with <code>model_weights.mat</code> & <code>validation_results.mat</code> • 4,293 validation samples represented by the supplied confusion matrix</div>
+    </div>
+    <div class="header-actions">
+        <a href="/outputs/model_weights.mat" class="btn btn-outline" download><i class="bi bi-download"></i> model_weights.mat (31.6 MB)</a>
+        <a href="/outputs/validation_results.mat" class="btn btn-primary" download><i class="bi bi-download"></i> validation_results.mat</a>
+    </div>
+</div>
+
+<!-- Active Weights Verification Banner -->
+<div class="model-status-card" style="background: #f0fdf4; border-color: #86efac;">
+    <div class="model-status-left">
+        <span class="pulse-dot"></span>
+        <div>
+            <strong style="color: #166534; font-size: 15px;">✓ LIVE TRAINED WEIGHTS ACTIVE: <code>models/model_weights.mat</code></strong>
+            <div style="font-size: 12.5px; color: #15803d; margin-top: 3px;">
+                Architecture: <strong>{{ metrics.backbone|upper }}</strong> • Environment: <strong>{{ metrics.executionEnvironment|upper }}</strong> • QWK: <strong>{{ metrics.validationQWK }}</strong> • Training Time: <strong>{{ metrics.trainingTimeHours }} Hours ({{ metrics.trainingTimeMinutes }} min)</strong>
+            </div>
+        </div>
+    </div>
+    <span class="badge-abdm" style="background: #eff6ff; color: #1d4ed8; border-color: #93c5fd;">
+        <i class="bi bi-info-circle"></i> Prototype Validation • External Clinical Validation Pending
+    </span>
+</div>
+
+<!-- Key Performance Metrics Grid -->
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid #16a34a;">
+        <div class="stat-label">Quadratic Weighted Kappa (QWK)</div>
+        <div class="stat-val" style="color: #16a34a;">{{ metrics.validationQWK }}</div>
+        <div style="font-size: 11.5px; color: #64748b;">Medical Standard (Target &gt; 0.80)</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #0284c7;">
+        <div class="stat-label">Validation Accuracy</div>
+        <div class="stat-val" style="color: #0284c7;">{{ metrics.bestObservedPrototypeValidationAccuracy|default(78.0) }}%</div>
+        <div style="font-size: 11.5px; color: #64748b;">Best observed prototype accuracy (team-reported)</div>
+        <div style="font-size: 10.5px; color: #94a3b8; margin-top: 3px;">Included artifact: {{ metrics.finalValidationAccuracy }}%</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stat-label">Referable DR Sensitivity</div>
+        <div class="stat-val" style="color: #d97706;">{{ metrics.clinical_metrics.sensitivity_referable_dr|default(81.46) }}%</div>
+        <div style="font-size: 11.5px; color: #64748b;">Measured from supplied confusion matrix • Target &gt; 90%</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
+        <div class="stat-label">Healthy Specificity</div>
+        <div class="stat-val" style="color: #8b5cf6;">{{ metrics.clinical_metrics.specificity_healthy|default(92.09) }}%</div>
+        <div style="font-size: 11.5px; color: #64748b;">Measured from supplied confusion matrix • Target &gt; 85%</div>
+    </div>
+</div>
+
+<!-- Validation interpretation note -->
+<div class="card" style="margin-bottom: 18px; border-left: 4px solid #f59e0b; background: #fffbeb;">
+    <strong><i class="bi bi-info-circle-fill"></i> Important validation note:</strong> SIH26038 specifies a target of <strong>&gt;90% sensitivity</strong> and <strong>&gt;85% specificity</strong> for referable DR (Level 2+). The supplied validation artifact measures approximately <strong>81.5% sensitivity</strong> and <strong>92.1% specificity</strong>, so the sensitivity target is <strong>not yet met</strong>. The 78.0% figure above is the best observed prototype validation accuracy reported by the project team; it is not a replacement for the measured artifact. External clinical validation is still required.
+</div>
+
+<!-- 2-Column Section: Confusion Matrix & Per-Class Accuracy -->
+<div class="grid-2col">
+    <!-- Left: 5x5 Confusion Matrix -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> 5x5 Clinical Confusion Matrix (validation_results.mat)</h3>
+            <span style="font-size: 11.5px; color: #64748b;">Total: 4,293 samples</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="table-styled" style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">True \ Pred</th>
+                        <th>Pred 0 (Normal)</th>
+                        <th>Pred 1 (Mild)</th>
+                        <th>Pred 2 (Mod)</th>
+                        <th>Pred 3 (Sev)</th>
+                        <th>Pred 4 (PDR)</th>
+                        <th>Class Acc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: left; font-weight: 700;">Grade 0 (Normal)</td>
+                        <td style="background: #dcfce7; font-weight: 800; color: #166534;">1,094</td>
+                        <td>102</td>
+                        <td>58</td>
+                        <td>0</td>
+                        <td>5</td>
+                        <td><strong style="color: #166534;">86.9%</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 700;">Grade 1 (Mild)</td>
+                        <td>127</td>
+                        <td style="background: #fef9c3; font-weight: 800; color: #854d0e;">470</td>
+                        <td>78</td>
+                        <td>7</td>
+                        <td>6</td>
+                        <td><strong style="color: #854d0e;">68.3%</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 700;">Grade 2 (Moderate)</td>
+                        <td>172</td>
+                        <td>177</td>
+                        <td style="background: #ffedd5; font-weight: 800; color: #9a3412;">500</td>
+                        <td>81</td>
+                        <td>46</td>
+                        <td><strong style="color: #9a3412;">51.2%</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 700;">Grade 3 (Severe)</td>
+                        <td>2</td>
+                        <td>35</td>
+                        <td>35</td>
+                        <td style="background: #fee2e2; font-weight: 800; color: #991b1b;">550</td>
+                        <td>43</td>
+                        <td><strong style="color: #991b1b;">82.7%</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 700;">Grade 4 (PDR)</td>
+                        <td>9</td>
+                        <td>40</td>
+                        <td>40</td>
+                        <td>37</td>
+                        <td style="background: #7f1d1d; font-weight: 800; color: #ffffff;">579</td>
+                        <td><strong style="color: #7f1d1d;">82.1%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="font-size: 11.5px; color: #64748b; margin-top: 10px;">
+            * Diagonal green/highlighted cells represent verified true positive clinical diagnoses.
+        </div>
+    </div>
+
+    <!-- Right: Per-Class Accuracy & Class Weights Charts -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-bar-chart-fill text-primary"></i> Per-Class Accuracy & Imbalance Resolution</h3>
+            <span class="badge-mini">EfficientNet-B0</span>
+        </div>
+        <div class="chart-box" style="height: 250px;">
+            <canvas id="chartPerClass"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section: Training Hyperparameters & File Integration -->
+<div class="grid-2col">
+    <!-- Training Hyperparameters -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-gear-wide-connected text-primary"></i> Training Specifications (model_weights.mat)</h3>
+        </div>
+        <div class="form-grid-2">
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">CNN Backbone</label>
+                <div style="font-weight: 700; font-size: 14px;">EfficientNet-B0 (Transfer Learning)</div>
+            </div>
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">Execution Hardware</label>
+                <div style="font-weight: 700; font-size: 14px; color: #16a34a;"><i class="bi bi-gpu-card"></i> NVIDIA GPU Accelerated</div>
+            </div>
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">Number of Epochs</label>
+                <div style="font-weight: 700; font-size: 14px;">{{ metrics.numEpochs }} Epochs (30 Complete Passes)</div>
+            </div>
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">Mini-Batch Size</label>
+                <div style="font-weight: 700; font-size: 14px;">{{ metrics.miniBatchSize }} (Optimized for 6GB VRAM)</div>
+            </div>
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">Initial Learning Rate</label>
+                <div style="font-weight: 700; font-size: 14px; font-family: monospace;">{{ metrics.learningRate }} (Adam Optimizer)</div>
+            </div>
+            <div>
+                <label style="font-size: 11.5px; color: #64748b; text-transform: uppercase;">Total Training Time</label>
+                <div style="font-weight: 700; font-size: 14px;">{{ metrics.trainingTimeHours }} Hours ({{ metrics.trainingTimeMinutes }} mins)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inverse Class Frequency Weights Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-pie-chart-fill text-warning"></i> Weighted Cross-Entropy Layer Weights</h3>
+            <span class="badge-mini">Class Imbalance Fix</span>
+        </div>
+        <table class="table-styled">
+            <thead>
+                <tr>
+                    <th>ICDR Severity Grade</th>
+                    <th>Trained Weight ($w_c$)</th>
+                    <th>Compensation Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Grade 0 (Normal)</strong></td>
+                    <td style="font-family: monospace; font-weight: 700;">{{ metrics.classWeights[0] }}</td>
+                    <td>Majority class discount (prevents false positives)</td>
+                </tr>
+                <tr>
+                    <td><strong>Grade 1 (Mild NPDR)</strong></td>
+                    <td style="font-family: monospace; font-weight: 700;">{{ metrics.classWeights[1] }}</td>
+                    <td>Boosted for early microaneurysm detection</td>
+                </tr>
+                <tr>
+                    <td><strong>Grade 2 (Moderate NPDR)</strong></td>
+                    <td style="font-family: monospace; font-weight: 700;">{{ metrics.classWeights[2] }}</td>
+                    <td>Balanced for exudates and micro-hemorrhages</td>
+                </tr>
+                <tr>
+                    <td><strong>Grade 3 (Severe NPDR)</strong></td>
+                    <td style="font-family: monospace; font-weight: 700;">{{ metrics.classWeights[3] }}</td>
+                    <td>Highest penalty multiplier for clinical safety</td>
+                </tr>
+                <tr>
+                    <td><strong>Grade 4 (Proliferative DR)</strong></td>
+                    <td style="font-family: monospace; font-weight: 700;">{{ metrics.classWeights[4] }}</td>
+                    <td>High sensitivity weight to prevent blindness risk</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('chartPerClass').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Grade 0 (Normal)', 'Grade 1 (Mild)', 'Grade 2 (Moderate)', 'Grade 3 (Severe)', 'Grade 4 (PDR)'],
+            datasets: [{
+                label: 'Per-Class Accuracy (%)',
+                data: [86.89, 68.31, 51.23, 82.71, 82.13],
+                backgroundColor: ['#16a34a', '#ca8a04', '#ea580c', '#dc2626', '#7f1d1d'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: { display: true, text: 'Accuracy (%)' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

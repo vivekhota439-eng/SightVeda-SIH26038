@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 140" width="100%" height="100%">
+  <defs>
+    <linearGradient id="saffronGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9933"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E7D32"/>
+      <stop offset="100%" stop-color="#1B5E20"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Left Emblem Graphics -->
+  <g transform="translate(10, 8)" filter="url(#shadow)">
+    <!-- Protective Caring Hands (Saffron & Green) -->
+    <!-- Left Caring Hand (Saffron) -->
+    <path d="M 25,95 C 10,80 8,55 24,38 C 34,26 48,22 62,25 C 52,32 46,45 48,58 C 49,67 55,75 62,80 C 50,86 36,92 25,95 Z" fill="url(#saffronGrad)"/>
+    
+    <!-- Right Caring Hand (Green) -->
+    <path d="M 95,95 C 110,80 112,55 96,38 C 86,26 72,22 58,25 C 68,32 74,45 72,58 C 71,67 65,75 58,80 C 70,86 84,92 95,95 Z" fill="url(#greenGrad)"/>
+
+    <!-- Central Health Plus & Floral Bud -->
+    <circle cx="60" cy="56" r="18" fill="#FFFFFF"/>
+    <path d="M 56,43 L 64,43 L 64,52 L 73,52 L 73,60 L 64,60 L 64,69 L 56,69 L 56,60 L 47,60 L 47,52 L 56,52 Z" fill="#D32F2F"/>
+
+    <!-- Base Tricolor Foundation Arc -->
+    <path d="M 22,102 C 45,115 75,115 98,102" stroke="#138808" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <path d="M 28,109 C 48,121 72,121 92,109" stroke="#FF9933" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Typography: Ayushman Bharat & ABDM -->
+  <g transform="translate(135, 20)">
+    <!-- Hindi Title: आयुष्मान भारत -->
+    <text x="0" y="32" font-family="'Plus Jakarta Sans', 'Segoe UI', 'Noto Sans Devanagari', sans-serif" font-size="28" font-weight="800" fill="#E65100" letter-spacing="0.5">आयुष्मान भारत</text>
+    
+    <!-- English Title: AYUSHMAN BHARAT -->
+    <text x="0" y="58" font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif" font-size="21" font-weight="800" fill="#0D47A1" letter-spacing="1.5">AYUSHMAN BHARAT</text>
+    
+    <!-- Subtitle: PM-JAY & Digital Mission -->
+    <rect x="0" y="70" width="290" height="22" rx="4" fill="#E8F5E9"/>
+    <text x="10" y="85" font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif" font-size="11.5" font-weight="700" fill="#2E7D32" letter-spacing="0.8">PRADHAN MANTRI JAN AROGYA YOJANA • ABDM</text>
+  </g>
+</svg>

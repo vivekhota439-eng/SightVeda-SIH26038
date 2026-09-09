@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHC Clinical Decision Support - Diabetic Retinopathy Report ({{ phc_patient.patient_id }})</title>
+<style>
+    @media print {
+        body { background: #fff !important; padding: 0 !important; }
+        .report-wrapper { box-shadow: none !important; max-width: 100% !important; border-radius: 0 !important; }
+        .no-print { display: none !important; }
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f1f5f9;
+        margin: 0;
+        padding: 24px;
+        color: #1e293b;
+        line-height: 1.5;
+    }
+    .report-wrapper {
+        max-width: 1080px;
+        margin: auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 36px 42px;
+    }
+    /* Top Banner */
+    .top-banner {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+        letter-spacing: 0.3px;
+    }
+    /* Header Box */
+    .header-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+    }
+    .header-box h1 {
+        margin: 0;
+        font-size: 23px;
+        color: #0f172a;
+        font-weight: 800;
+    }
+    .header-box .sub {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #475569;
+        font-weight: 500;
+    }
+    .header-box .facility {
+        font-size: 12px;
+        color: #2563eb;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+    .badge-status {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+    
+    /* Patient Clinical & Systemic Metadata Grid */
+    .patient-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 22px;
+        font-size: 13px;
+        gap: 12px;
+    }
+    .patient-grid div strong {
+        color: #64748b;
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .badge-lat {
+        font-size: 12px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+        display: inline-block;
+    }
+    .badge-alert {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #fee2e2;
+        color: #991b1b;
+        margin-left: 4px;
+    }
+
+    /* Section Headings */
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        border-left: 4px solid #2563eb;
+        padding-left: 10px;
+        margin: 30px 0 14px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* Section 1: Summary Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    .summary-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .summary-card .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+    .summary-card .val {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-top: 6px;
+    }
+
+    /* Grade Badges */
+    .badge-g0 { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-g1 { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .badge-g2 { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+    .badge-g3 { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-g4 { background: #7f1d1d; color: #ffffff; border: 1px solid #991b1b; }
+
+    /* Warnings */
+    .warning-box {
+        background: #fffbeb;
+        border-left: 5px solid #f59e0b;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #92400e;
+        margin-bottom: 18px;
+    }
+    .danger-box {
+        background: #fef2f2;
+        border-left: 5px solid #ef4444;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #991b1b;
+        margin-bottom: 18px;
+    }
+
+    /* Probability Distribution Bars */
+    .prob-bar-container {
+        width: 100%;
+        background: #e2e8f0;
+        border-radius: 6px;
+        height: 12px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+    .prob-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.4s ease;
+    }
+    .prob-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: 14px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .prob-table th {
+        background: #f8fafc;
+        text-align: left;
+        padding: 10px 14px;
+        font-weight: 700;
+        color: #475569;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .prob-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .prob-row-selected {
+        background: #eff6ff !important;
+        font-weight: 700;
+    }
+
+    /* Image Display Grid */
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .image-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        background: #fff;
+    }
+    .image-card img {
+        width: 100%;
+        max-height: 220px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #000;
+    }
+    .image-card .card-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin: 8px 0 2px 0;
+        color: #334155;
+    }
+    .image-card .card-sub {
+        font-size: 11px;
+        color: #64748b;
+    }
+    .card-placeholder {
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 6px;
+        padding: 16px;
+        color: #64748b;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .badge-quadrant {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: #fdf2f8;
+        color: #be185d;
+        border: 1px solid #fbcfe8;
+        display: inline-block;
+    }
+
+    /* Tables */
+    .clinical-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+    .clinical-table th {
+        background: #f1f5f9;
+        text-align: left;
+        padding: 9px 12px;
+        font-weight: 700;
+        color: #475569;
+        border-bottom: 2px solid #cbd5e1;
+    }
+    .clinical-table td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Laboratory Reference Range Table */
+    .lab-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: 0;
+        background: #ffffff;
+    }
+    .lab-table th {
+        background: #f8fafc;
+        text-align: left;
+        padding: 10px 12px;
+        font-weight: 700;
+        color: #334155;
+        border-bottom: 2px solid #cbd5e1;
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .lab-table td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+    .lab-table tr:hover {
+        background-color: #f8fafc;
+    }
+    .lab-category-header td {
+        background: #f1f5f9 !important;
+        color: #0369a1 !important;
+        font-weight: 800 !important;
+        font-size: 11.5px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 7px 12px !important;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .observed-val {
+        font-weight: 800;
+        font-size: 13.5px;
+        font-family: monospace;
+        color: #0f172a;
+    }
+    .ref-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+    }
+
+
+    /* Triage Box */
+    .triage-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-left: 5px solid #16a34a;
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .triage-box-urgent {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-left: 5px solid #dc2626;
+    }
+    .workup-list {
+        margin: 8px 0 0 18px;
+        padding: 0;
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.6;
+    }
+
+    /* Audio Voice Assistant */
+    .audio-player-box {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        border: 1px solid #bfdbfe;
+        border-left: 5px solid #2563eb;
+        border-radius: 10px;
+        padding: 18px 22px;
+        margin: 16px 0 20px 0;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
+    }
+    .audio-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .audio-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e40af;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .audio-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 12px;
+    }
+    .btn-audio {
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        padding: 9px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    .btn-audio:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .btn-audio.stop {
+        background: #ef4444;
+    }
+    .btn-audio.stop:hover {
+        background: #dc2626;
+    }
+    .audio-status {
+        font-size: 12px;
+        font-weight: 700;
+        color: #059669;
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: #d1fae5;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+    .speaking-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        animation: audioPulse 0.8s infinite alternate;
+    }
+    @keyframes audioPulse {
+        from { transform: scale(0.8); opacity: 0.5; }
+        to { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* Regional Language Section */
+    .regional-card {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .regional-card h4 { margin: 0 0 8px 0; font-size: 14px; color: #0f172a; }
+    .lang-item { margin-bottom: 8px; }
+    .lang-item strong { color: #334155; }
+
+    /* Doctor Validation Section */
+    .validation-panel {
+        background: #fafafa;
+        border: 2px dashed #94a3b8;
+        border-radius: 10px;
+        padding: 22px;
+        margin-top: 30px;
+    }
+    .validation-grid {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 24px;
+        margin-top: 14px;
+    }
+    .checkbox-row {
+        margin: 8px 0;
+        font-size: 13px;
+    }
+    .comments-box {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        border-radius: 6px;
+        min-height: 60px;
+        padding: 8px;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+    .sig-block {
+        text-align: center;
+        font-size: 12px;
+        color: #64748b;
+    }
+    .sig-line {
+        border-bottom: 1px solid #334155;
+        margin-top: 60px;
+        margin-bottom: 6px;
+    }
+
+    /* Top Sticky Multilingual Bar */
+    .lang-bar-sticky {
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        background: #0f172a;
+        color: #ffffff;
+        padding: 10px 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.18);
+        border-bottom: 2px solid #3b82f6;
+        margin-bottom: 18px;
+    }
+    .lang-bar-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .lang-bar-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .lang-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .lang-btn {
+        background: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #475569;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .lang-btn:hover {
+        background: #334155;
+        border-color: #94a3b8;
+    }
+    .lang-btn.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #60a5fa;
+        box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+    }
+
+    /* Footer */
+    .report-footer {
+        border-top: 1px solid #e2e8f0;
+        margin-top: 36px;
+        padding-top: 14px;
+        text-align: center;
+        font-size: 12px;
+        color: #94a3b8;
+    }
+</style>
+</head>
+<body>
+
+<!-- TOP STICKY MULTILINGUAL & GRADE SWITCHER BAR -->
+<div class="lang-bar-sticky no-print">
+    <div class="lang-bar-inner">
+        <!-- Language Switcher -->
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="lang-bar-title">
+                <span>🌐</span>
+                <span data-i18n="lang_bar_label">Report Language / भाषा / ಭಾಷೆ:</span>
+            </div>
+            <div class="lang-buttons">
+                <button type="button" class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">
+                    🇬🇧 English
+                </button>
+                <button type="button" class="lang-btn active" id="btn-lang-hi" onclick="setLanguage('hi')">
+                    🇮🇳 हिंदी (Hindi)
+                </button>
+                <button type="button" class="lang-btn" id="btn-lang-mr" onclick="setLanguage('mr')">
+                    🚩 मराठी (Marathi)
+                </button>
+                <button type="button" class="lang-btn" id="btn-lang-tcy" onclick="setLanguage('tcy')">
+                    🌴 ತುಳು (Tulu)
+                </button>
+            </div>
+        </div>
+
+        <!-- Grade Quick View Switcher -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 11.5px; font-weight: 700; color: #cbd5e1;" data-i18n="grade_switch_label">
+                👁️ Test DR Grade View / ग्रेड देखें:
+            </span>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <a href="test_grade_0_report.html" class="lang-btn {% if model.grade == 0 %}active{% endif %}" style="text-decoration: none; padding: 4px 10px; font-size: 11.5px; background: {% if model.grade == 0 %}#10b981{% else %}#1e293b{% endif %};">Grade 0 (Normal)</a>
+                <a href="test_grade_1_report.html" class="lang-btn {% if model.grade == 1 %}active{% endif %}" style="text-decoration: none; padding: 4px 10px; font-size: 11.5px; background: {% if model.grade == 1 %}#eab308{% else %}#1e293b{% endif %};">Grade 1 (Mild)</a>
+                <a href="test_grade_2_report.html" class="lang-btn {% if model.grade == 2 %}active{% endif %}" style="text-decoration: none; padding: 4px 10px; font-size: 11.5px; background: {% if model.grade == 2 %}#f97316{% else %}#1e293b{% endif %};">Grade 2 (Medium)</a>
+                <a href="test_grade_3_report.html" class="lang-btn {% if model.grade == 3 %}active{% endif %}" style="text-decoration: none; padding: 4px 10px; font-size: 11.5px; background: {% if model.grade == 3 %}#ef4444{% else %}#1e293b{% endif %};">Grade 3 (High)</a>
+                <a href="test_grade_4_report.html" class="lang-btn {% if model.grade == 4 %}active{% endif %}" style="text-decoration: none; padding: 4px 10px; font-size: 11.5px; background: {% if model.grade == 4 %}#7f1d1d{% else %}#1e293b{% endif %};">Grade 4 (PDR)</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="report-wrapper">
+    <!-- Top Notice -->
+    <div class="top-banner" id="txt-top-banner" data-i18n="top_banner">
+        PHC CLINICAL DECISION SUPPORT SYSTEM — FOR USE BY MEDICAL OFFICERS & TELE-OPHTHALMOLOGISTS
+    </div>
+
+    <!-- Header -->
+    <div class="header-box">
+        <div>
+            <h1 id="txt-report-title" data-i18n="report_title">Diabetic Retinopathy Clinical Screening Report</h1>
+            <div class="sub" id="txt-sub-title" data-i18n="sub_title">Ayushman Bharat Digital Health Mission (ABDM) • Primary Care Ophthalmic Tele-Triage</div>
+            <div class="facility">Facility: {{ phc_patient.phc_center }} | Attending Officer: {{ phc_patient.medical_officer }}</div>
+        </div>
+        <div style="text-align: right;">
+            <span class="badge-status">{{ doctor.status }}</span>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Screened: {{ phc_patient.screening_date }}</div>
+        </div>
+    </div>
+
+    <!-- Patient Clinical & Systemic Metadata Grid -->
+    <div class="patient-grid">
+        <div>
+            <strong data-i18n="lbl_patient_id">Patient ID & Name</strong>
+            {{ phc_patient.patient_id }} — {{ phc_patient.name }}
+        </div>
+        <div>
+            <strong data-i18n="lbl_age_gender">Age / Gender</strong>
+            {{ phc_patient.age }} Years / {{ phc_patient.gender }}
+        </div>
+        <div>
+            <strong data-i18n="lbl_laterality">Laterality (Eye)</strong>
+            <span class="badge-lat">{{ phc_patient.laterality }}</span>
+        </div>
+        <div>
+            <strong data-i18n="lbl_camera">Camera / Modality</strong>
+            {{ phc_patient.camera_type }}
+        </div>
+        <div>
+            <strong data-i18n="lbl_hba1c">Glycated Hemoglobin (HbA1c)</strong>
+            <span style="font-weight: 700;">{{ phc_patient.hba1c }}</span>
+            <span class="badge-alert" data-i18n="lbl_target_hba1c">Target &lt; 7.0%</span>
+        </div>
+        <div>
+            <strong data-i18n="lbl_bp">Blood Pressure (BP)</strong>
+            <span style="font-weight: 700;">{{ phc_patient.bp }}</span>
+        </div>
+        <div>
+            <strong data-i18n="lbl_dm_duration">DM Duration / History</strong>
+            {{ phc_patient.dm_duration }}
+        </div>
+        <div>
+            <strong data-i18n="lbl_va">Visual Acuity (BCVA)</strong>
+            {{ phc_patient.visual_acuity }}
+        </div>
+    </div>
+
+    <!-- Quality Warning (If Borderline or Poor) -->
+    {% if quality.status == 'poor' %}
+    <div class="danger-box">
+        <strong>Warning: Poor Fundus Image Quality Detected (Score: {{ quality.score }})</strong><br>
+        {{ quality.message }}<br>
+        <em>Reliability of automated microvascular detection is reduced. Recapture fundus photography after pupil dilation or check for media opacity/cataract before clinical diagnosis.</em>
+    </div>
+    {% elif quality.status == 'borderline' %}
+    <div class="warning-box">
+        <strong>Notice: Borderline Image Quality (Score: {{ quality.score }})</strong><br>
+        {{ quality.message }}
+    </div>
+    {% endif %}
+
+    <!-- 1. AI Diagnostic Grade & Softmax Probability Distribution (5-Class) -->
+    <div class="section-title">
+        <span id="txt-sec1-title">1. AI Screening Summary & 5-Class Probability Distribution</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Task 2 Deep Convolutional Inference</span>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="label" data-i18n="lbl_assigned_grade">Assigned Grade</div>
+            <div class="val">
+                <span style="padding: 4px 10px; border-radius: 6px; font-size: 16px;" 
+                      class="badge-g{{ model.grade }}">
+                    Grade {{ model.grade }}
+                </span>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">{{ translation.grade_label }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label" data-i18n="lbl_raw_prob">Raw Softmax Probability</div>
+            <div class="val">{{ calibration.raw_percentage }}%</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Top-1 Model Logit</div>
+        </div>
+        <div class="summary-card">
+            <div class="label" data-i18n="lbl_calib_conf">Calibrated Confidence</div>
+            <div class="val">
+                {% if calibration.status == 'calibrated' %}
+                    {{ calibration.calibrated_percentage }}%
+                {% else %}
+                    <span style="font-size: 12px; color: #64748b; font-weight: 600; line-height: 1.3; display: block; margin-top: 4px;">Uncalibrated (Validation data not provided)</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                {% if calibration.status == 'calibrated' %}{{ calibration.method }}{% else %}Raw Softmax Ceiled{% endif %}
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="label" data-i18n="lbl_urgency">Referral Urgency</div>
+            <div class="val" style="font-size: 14px; color: #1e40af; margin-top: 10px;">
+                {{ triage.urgency }}
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">{{ recommendations.follow_up_window }}</div>
+        </div>
+    </div>
+
+    <!-- 5-Class Probability Table with Differential Analysis -->
+    <table class="prob-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;" data-i18n="th_icdr">ICDR Severity Classification</th>
+                <th style="width: 15%;" data-i18n="th_prob">Softmax Probability</th>
+                <th style="width: 35%;" data-i18n="th_dist">Differential Confidence Distribution</th>
+                <th style="width: 25%;" data-i18n="th_align">Clinical Stage Alignment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in probabilities.table %}
+            <tr class="{% if row.is_assigned %}prob-row-selected{% endif %}">
+                <td>
+                    <span style="padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 6px;" class="badge-g{{ row.grade }}">G{{ row.grade }}</span>
+                    <strong>{{ row.label }}</strong>
+                    {% if row.is_assigned %}
+                        <span style="color: #2563eb; font-size: 11px; margin-left: 4px;">[Assigned]</span>
+                    {% endif %}
+                </td>
+                <td style="font-family: monospace; font-size: 13px;">
+                    {{ row.probability }}
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="prob-bar-container">
+                            <div class="prob-bar-fill" 
+                                 style="width: {{ row.percentage }}%; 
+                                        background: {% if row.grade == 0 %}#10b981{% elif row.grade == 1 %}#eab308{% elif row.grade == 2 %}#f97316{% elif row.grade == 3 %}#ef4444{% else %}#7f1d1d{% endif %};">
+                            </div>
+                        </div>
+                        <span style="font-size: 12px; font-weight: 700; min-width: 45px;">{{ row.percentage }}%</span>
+                    </div>
+                </td>
+                <td style="font-size: 12px; color: #475569;">
+                    {% if row.grade == 0 %}No microvascular abnormalities
+                    {% elif row.grade == 1 %}Isolated microaneurysms only
+                    {% elif row.grade == 2 %}Microaneurysms + exudates/hemorrhages
+                    {% elif row.grade == 3 %}4:2:1 Rule (High neovascular risk)
+                    {% elif row.grade == 4 %}Active neovascularization / vitreous bleed
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if probabilities.is_narrow %}
+    <div class="warning-box">
+        <strong>⚠️ Clinical Differential Notice:</strong> {{ probabilities.margin_note }}
+    </div>
+    {% endif %}
+
+    <!-- 1.1 Pure Fundus Retinal Feature Quantification Panel ('क्या ज्यादा है / क्या कम है / क्या सामान्य है') -->
+    <div class="section-title">
+        <span id="txt-sec1-1-title">1.1 Pure Fundus Retinal Feature Quantification Panel</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">रेटिना पर मौजूद वास्तविक फीचर्स: 'क्या ज्यादा है, क्या कम है, क्या सामान्य है'</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <table class="lab-table">
+            <thead>
+                <tr>
+                    <th style="width: 22%;" data-i18n="th_feat">Retinal Feature & Pathology</th>
+                    <th style="width: 16%; background: #eff6ff; color: #1d4ed8; border-bottom: 2px solid #3b82f6;" data-i18n="th_obs">Observed on Fundus</th>
+                    <th style="width: 18%;" data-i18n="th_norm">Healthy Baseline</th>
+                    <th style="width: 15%;" data-i18n="th_dev">Deviation (Status)</th>
+                    <th style="width: 17%;" data-i18n="th_imp">Clinical Implication</th>
+                    <th style="width: 12%;" data-i18n="th_tech">Detection Technique</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set ns = namespace(cat='') %}
+                {% for row in reference_panel %}
+                    {% if row.category != ns.cat %}
+                        {% set ns.cat = row.category %}
+                        <tr class="lab-category-header">
+                            <td colspan="6">🔹 {{ row.category }}</td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <td>
+                            <strong style="color: #1e293b;">{{ row.feature }}</strong>
+                        </td>
+                        <td style="background: #f8fafc;">
+                            <span class="observed-val">{{ row.observed }}</span>
+                        </td>
+                        <td style="font-size: 12px; color: #334155; line-height: 1.4;">
+                            {{ row.baseline }}
+                        </td>
+                        <td>
+                            <span class="ref-badge {{ row.badge_class }}">{{ row.deviation }}</span>
+                        </td>
+                        <td style="font-size: 11.5px; color: #475569; line-height: 1.35;">
+                            {{ row.implication }}
+                        </td>
+                        <td style="font-size: 11px; color: #64748b;">
+                            {{ row.technique }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 14px; font-size: 11px; color: #64748b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <strong>Strict Optical Authenticity Guarantee:</strong> All metrics in this panel are directly computed from fundus image pixels and deep convolutional activations. External non-optical metrics (Blood Pressure in mmHg, Blood Sugar in mg/dL) require external physiological sensors and are strictly excluded from direct retinal camera quantification.
+            </div>
+            <div style="font-weight: 700; color: #0284c7; font-size: 11px; white-space: nowrap;">
+                ✓ 100% Fundus Image & AI Derived
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Fundus Image & AI Explainability (Grad-CAM) -->
+    <div class="section-title">
+        <span id="txt-sec2-title">2. Fundus Image & AI Explainability (Grad-CAM)</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Gradient-Weighted Class Activation Mapping</span>
+    </div>
+    <div class="image-grid">
+        <!-- 1. Original Image -->
+        <div class="image-card" style="position: relative;">
+            <div style="position: absolute; top: 8px; left: 8px; background: #475569; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; z-index: 2;">
+                1. RAW INPUT
+            </div>
+            {% if explainability.original_image %}
+                <img src="{{ explainability.original_image }}" alt="Original Fundus Image">
+            {% else %}
+                <div class="card-placeholder">Original Image File Not Found</div>
+            {% endif %}
+            <div class="card-title">1. Original Fundus Photo</div>
+            <div class="card-sub">{{ phc_patient.laterality }} • Raw Optical Capture</div>
+        </div>
+
+        <!-- 2. Task 1 Enhanced Image (CLAHE) -->
+        <div class="image-card" style="position: relative; border: 2px solid #0284c7; box-shadow: 0 0 12px rgba(2, 132, 199, 0.18);">
+            <div style="position: absolute; top: 8px; left: 8px; background: #0284c7; color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; z-index: 2; display: flex; align-items: center; gap: 4px;">
+                <span>✨</span> TASK 1 ENHANCED
+            </div>
+            <img src="enhanced_fundus.png" alt="Task 1 Enhanced Fundus Image" onerror="this.src='{{ explainability.original_image }}'">
+            <div class="card-title" style="color: #0284c7;">2. ✨ Task 1 Enhanced (CLAHE)</div>
+            <div class="card-sub" style="color: #0369a1; font-weight: 600;">Denoised • Rayleigh Contrast Boost</div>
+        </div>
+
+        <!-- 3. Grad-CAM Heatmap -->
+        <div class="image-card" style="position: relative;">
+            <div style="position: absolute; top: 8px; left: 8px; background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; z-index: 2;">
+                3. GRAD-CAM
+            </div>
+            {% if explainability.available and explainability.heatmap_path %}
+                <img src="{{ explainability.heatmap_path }}" alt="Grad-CAM Heatmap">
+                <div class="card-title">3. Grad-CAM Heatmap</div>
+                <div class="card-sub">Layer: {{ explainability.target_layer_name }}</div>
+            {% else %}
+                <div class="card-placeholder">
+                    <strong>Explainability Unavailable</strong><br>
+                    {{ explainability.message }}
+                </div>
+                <div class="card-title">3. Grad-CAM Heatmap</div>
+                <div class="card-sub">Model Weights Not Provided</div>
+            {% endif %}
+        </div>
+
+        <!-- 4. Grad-CAM Overlay -->
+        <div class="image-card" style="position: relative;">
+            <div style="position: absolute; top: 8px; left: 8px; background: #7c3aed; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; z-index: 2;">
+                4. OVERLAY
+            </div>
+            {% if explainability.available and explainability.overlay_path %}
+                <img src="{{ explainability.overlay_path }}" alt="Grad-CAM Overlay">
+                <div class="card-title">4. Retinal Attention Overlay</div>
+                <div class="card-sub">Vessel & Lesion Alignment Map</div>
+            {% else %}
+                <div class="card-placeholder">
+                    <strong>Overlay Unavailable</strong><br>
+                    Attention overlay omitted.
+                </div>
+                <div class="card-title">4. Attention Overlay</div>
+                <div class="card-sub">Omitted</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Technical Explainability Decomposition Box -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div>
+                <strong style="color: #475569; display: block; font-size: 11px; text-transform: uppercase;">CNN Target Layer</strong>
+                <span style="font-family: monospace; color: #0369a1;">{{ explainability.target_layer_name }}</span>
+            </div>
+            <div>
+                <strong style="color: #475569; display: block; font-size: 11px; text-transform: uppercase;">Peak Activation Coordinates</strong>
+                <span style="font-family: monospace; color: #0369a1;">{{ explainability.peak_coords }}</span>
+            </div>
+            <div>
+                <strong style="color: #475569; display: block; font-size: 11px; text-transform: uppercase;">Anatomical Retinal Quadrant</strong>
+                <span class="badge-quadrant">{{ explainability.peak_quadrant }}</span>
+            </div>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+            <strong>Explainability Rigor:</strong> {{ explainability.disclaimer }}
+        </div>
+    </div>
+
+    <!-- 3. Objective Image Quality Decomposition & Cataract Screening -->
+    <div class="section-title">
+        <span>3. Objective Image Quality Decomposition & Media Opacity Assessment</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Task 1 Quality Assessment Pipeline</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+        <table class="clinical-table" style="margin-bottom: 8px;">
+            <thead>
+                <tr>
+                    <th>Quality Parameter</th>
+                    <th>Measured Metric</th>
+                    <th>Clinical Benchmark Threshold</th>
+                    <th>Decomposition Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Optical Focus / Sharpness</strong></td>
+                    <td style="font-family: monospace;">{{ quality.breakdown.laplacian_focus_variance }}</td>
+                    <td>Laplacian Variance &gt; 100</td>
+                    <td>
+                        <span style="font-weight: 600; color: {% if 'Optimal' in quality.breakdown.laplacian_focus_status %}#16a34a{% else %}#ea580c{% endif %};">
+                            {{ quality.breakdown.laplacian_focus_status }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Exposure & Illumination Uniformity</strong></td>
+                    <td style="font-family: monospace;">{{ quality.breakdown.exposure_mean_intensity }}</td>
+                    <td>Mean Gray Intensity: 80 – 180</td>
+                    <td>
+                        <span style="font-weight: 600; color: {% if 'Normal' in quality.breakdown.exposure_uniformity_status %}#16a34a{% else %}#ea580c{% endif %};">
+                            {{ quality.breakdown.exposure_uniformity_status }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Retinal Vessel Contrast Spectrum</strong></td>
+                    <td style="font-family: monospace;">{{ quality.breakdown.retinal_contrast_std }}</td>
+                    <td>Standard Deviation &gt; 35</td>
+                    <td>Adequate vascular detail resolution</td>
+                </tr>
+                <tr>
+                    <td><strong>Media Opacity / Cataract Screening</strong></td>
+                    <td colspan="2" style="font-size: 12px; color: #475569;">Evaluated via illumination attenuation and low-frequency blur</td>
+                    <td>
+                        <span style="font-weight: 700; color: {% if 'Clear' in quality.breakdown.media_opacity_cataract %}#16a34a{% else %}#dc2626{% endif %};">
+                            {{ quality.breakdown.media_opacity_cataract }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="font-size: 11px; color: #64748b;">
+            Overall Quality Gate: <strong>{{ quality.status|upper }}</strong> (Composite Score: {{ quality.score }}/1.00). {{ quality.detailed_status }}
+        </div>
+    </div>
+
+    <!-- 4. Lesion Evidence & ICDR 4:2:1 Diagnostic Reference -->
+    <div class="section-title">
+        <span>4. Microvascular Lesions & ICDR 4:2:1 Diagnostic Reference</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Evidence Relationship Chain</span>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+            Evidence Relationship Chain:
+        </div>
+        <div style="font-size: 13px; color: #0284c7; font-family: monospace;">
+            {{ lesions.evidence_chain }}
+        </div>
+    </div>
+
+    {% if lesions.annotated_image %}
+    <div style="text-align: center; margin: 15px 0;">
+        <img src="{{ lesions.annotated_image }}" alt="Annotated Lesions" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1;">
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Spatial Bounding Box Localization (Task 2 Provided Coordinates)</div>
+    </div>
+    {% endif %}
+
+    <table class="clinical-table">
+        <thead>
+            <tr>
+                <th>Pathology / Lesion Type</th>
+                <th>Detected Count / Presence</th>
+                <th>Detection Confidence</th>
+                <th>Spatial Coordinates</th>
+                <th>Clinical Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if lesions.findings and lesions.findings|length > 0 %}
+                {% for f in lesions.findings %}
+                <tr>
+                    <td><strong>{{ f.type }}</strong></td>
+                    <td>{{ f.count }}</td>
+                    <td>{{ f.confidence }}</td>
+                    <td>
+                        {% if f.coordinates and f.coordinates|length > 0 %}
+                            Provided ({{ f.coordinates|length }} bounding box[es])
+                        {% else %}
+                            <span style="color: #94a3b8;">Not provided by model (No coordinates invented)</span>
+                        {% endif %}
+                    </td>
+                    <td><span style="color: #d97706; font-size: 12px;">{{ f.status }}</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #64748b; padding: 16px;">
+                        <strong style="color: #475569; font-size: 13px;">Lesion-level detection unavailable from Task 2 model.</strong><br>
+                        <span style="font-size: 11px; color: #94a3b8;">Task 2 model is classification-only and does not provide microvascular lesion detections or bounding box coordinates.</span>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- ICDR 4:2:1 Diagnostic Reference Table -->
+    <div style="margin-top: 14px; margin-bottom: 24px;">
+        <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+            International Clinical Diabetic Retinopathy (ICDR) Severity Diagnostic Matrix:
+        </div>
+        <table class="clinical-table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">ICDR Grade</th>
+                    <th style="width: 20%;">Clinical Classification</th>
+                    <th style="width: 35%;">International Diagnostic Rule (4:2:1 Rule)</th>
+                    <th style="width: 30%;">Pathognomonic Fundus Findings</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for icdr in icdr_criteria %}
+                <tr class="{% if loop.index0 == model.grade %}prob-row-selected{% endif %}">
+                    <td>
+                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 11px;" class="badge-g{{ loop.index0 }}">{{ icdr.grade }}</span>
+                        {% if loop.index0 == model.grade %}
+                            <span style="color: #2563eb; font-weight: bold; margin-left: 4px;">● Predicted</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ icdr.name }}</strong></td>
+                    <td>{{ icdr.rule }}</td>
+                    <td style="color: #475569;">{{ icdr.findings }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 5. PHC Tele-Ophthalmology Referral & Pre-Referral Workup Protocol -->
+    <div class="section-title">
+        <span>5. PHC Tele-Ophthalmology Referral & Pre-Referral Workup Protocol</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Standardized Triage Protocol</span>
+    </div>
+
+    <div class="triage-box {% if model.grade >= 3 %}triage-box-urgent{% endif %}">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+                <span style="font-size: 12px; text-transform: uppercase; font-weight: 700; color: #64748b;">Recommended Escalation Pathway:</span>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px;">
+                    Destination: {{ triage.referral_facility }}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <span style="font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 20px; 
+                             background: {% if model.grade >= 3 %}#fee2e2; color: #991b1b; border: 1px solid #fecaca;{% elif model.grade == 2 %}#fed7aa; color: #9a3412; border: 1px solid #fdba74;{% else %}#dcfce7; color: #166534; border: 1px solid #bbf7d0;{% endif %};">
+                    {{ triage.urgency }} (Window: {{ recommendations.follow_up_window }})
+                </span>
+            </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+            <strong style="font-size: 13px; color: #0f172a;">Pre-Referral Systemic & Ophthalmic Workup Checklist:</strong>
+            <ul class="workup-list">
+                {% for item in triage.workup_checklist %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 13px; color: #334155;">
+            <strong>Tele-Ophthalmology Action:</strong> {{ triage.tele_ophthalmology_action }}
+        </div>
+        <div style="margin-top: 6px; font-size: 12px; color: #15803d; font-weight: 600;">
+            • Glycemic Target Guideline: {{ triage.prevention_guideline }}
+        </div>
+    </div>
+
+    <!-- 6. Longitudinal Progression (If available) -->
+    {% if longitudinal.history_table and longitudinal.history_table|length > 0 %}
+    <div class="section-title">
+        <span>6. Longitudinal Retinal Progression</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Historical Comparison</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 10px;">
+            Assessment Trend: {{ longitudinal.message }}
+        </div>
+        {% if longitudinal.graph_path %}
+            <div style="text-align: center; margin: 15px 0;">
+                <img src="{{ longitudinal.graph_path }}" alt="Longitudinal Progression Graph" style="max-width: 100%; border-radius: 6px;">
+            </div>
+        {% endif %}
+        <table class="clinical-table" style="margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th>Examination Date</th>
+                    <th>ICDR Grade</th>
+                    <th>Model Confidence</th>
+                    <th>Visit Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in longitudinal.history_table %}
+                <tr>
+                    <td>{{ row.date }}</td>
+                    <td><strong>{{ row.grade }}</strong></td>
+                    <td>{{ row.confidence }}</td>
+                    <td>{{ row.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- 7. Ophthalmologist / Medical Officer Review & Verification Section -->
+    <div class="validation-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 800; color: #0f172a;">7. Medical Officer / Ophthalmologist Review & Verification</span>
+            <span style="font-size: 12px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 4px;">
+                STATUS: {{ doctor.status|upper }}
+            </span>
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin: 6px 0 14px 0;">
+            {{ doctor.disclaimer }}
+        </p>
+        <div class="validation-grid">
+            <div>
+                <div class="checkbox-row"><input type="checkbox" {% if doctor.review_options[0].checked %}checked{% endif %}> <span data-i18n="chk_agree"><strong>Agree:</strong> Confirm AI Grade and reported findings.</span></div>
+                <div class="checkbox-row"><input type="checkbox" {% if doctor.review_options[1].checked %}checked{% endif %}> <span data-i18n="chk_modify"><strong>Modify:</strong> Override Grade to: [ ] 0 [ ] 1 [ ] 2 [ ] 3 [ ] 4</span></div>
+                <div class="checkbox-row"><input type="checkbox" {% if doctor.review_options[2].checked %}checked{% endif %}> <span data-i18n="chk_reject"><strong>Reject:</strong> Inconclusive / Image quality unacceptable / Dilated exam required.</span></div>
+                <div style="margin-top: 10px; font-size: 12px; font-weight: 600; color: #334155;"><span data-i18n="lbl_notes">Physician Clinical Notes:</span></div>
+                <div class="comments-box">{{ doctor.doctor_comments }}</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div style="font-weight: bold; color: #0f172a;"><span data-i18n="lbl_sig">Doctor Signature & Registration Stamp</span></div>
+                <div style="margin-top: 4px;">Practitioner Name: {{ doctor.doctor_name }}</div>
+                <div style="margin-top: 2px;">Medical Council Reg No: {{ doctor.reg_number }}</div>
+                <div style="margin-top: 2px;">Verification Date: {{ doctor.review_date }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Patient Counseling & Vernacular Voice Assistant -->
+    <div class="section-title">
+        <span id="txt-sec8-title">8. Patient Counseling & Vernacular Voice Assistant / क्षेत्रीय भाषा एवं ध्वनि सारांश</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">Selected: {{ translation.language_name }}</span>
+    </div>
+
+    <!-- Voice Assistant Audio Box -->
+    <div class="audio-player-box">
+        <div class="audio-header">
+            <div class="audio-title">
+                <span style="font-size: 20px;">🔊</span>
+                <span><span data-i18n="audio_title">Voice Assistant (बोलकर सुनें)</span></span>
+            </div>
+            <div id="audioStatus" class="audio-status">
+                <span class="speaking-dot"></span>
+                <span id="audioStatusText">ऑडियो चल रहा है...</span>
+            </div>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: #334155;">
+            यदि मरीज को रिपोर्ट पढ़ने में कठिनाई हो, तो नीचे दिए गए ऑडियो प्लेयर से पूरी रिपोर्ट <strong>असली भारतीय बोलचाल में सुनें</strong> कि <strong>क्या हुआ है, क्यों हुआ है, और क्या करना है</strong>:
+        </p>
+
+        <!-- REAL NATURAL INDIAN HUMAN VOICE PLAYER (gTTS) -->
+        {% if audio and audio.available and audio.data_uri %}
+        <div style="background: #ffffff; border: 2px solid #16a34a; border-radius: 8px; padding: 14px 16px; margin: 12px 0; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <div style="font-weight: 700; color: #15803d; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 18px;">🇮🇳</span>
+                    <span>प्राकृतिक भारतीय आवाज़ (Natural Indian Hindi Voice):</span>
+                </div>
+                <span style="font-size: 11px; background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                    HD Human Audio
+                </span>
+            </div>
+            <audio controls style="width: 100%; height: 42px; margin: 6px 0;" preload="auto">
+                <source src="{{ audio.filename }}" type="audio/mpeg">
+                <source src="{{ audio.data_uri }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <div style="font-size: 11px; color: #475569; margin-top: 4px;">
+                <span data-i18n="audio_play_note">• <strong>प्ले (Play ▶) बटन दबाएं:</strong> यह आवाज़ बिल्कुल वैसे ही समझाएगी जैसे भारत में डॉक्टर मरीज से बात करते हैं।</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 10px; font-size: 12px; font-weight: 600; color: #475569;">
+            अन्य भाषाएं एवं कंप्यूटर आवाज़ विकल्प:
+        </div>
+        <div class="audio-controls">
+            <button type="button" class="btn-audio" onclick="speakReport('hi')" style="background: #15803d;">
+                <span>🔊</span> हिंदी में पूरा समझें (Hindi Voice)
+            </button>
+            <button type="button" class="btn-audio" onclick="speakReport('hinglish')" style="background: #ea580c;">
+                <span>🔊</span> आसान बोलचाल हिंदी (Hinglish - हर PC पर 100% सुलभ)
+            </button>
+            <button type="button" class="btn-audio" onclick="speakReport('en')" style="background: #0284c7;">
+                <span>🔊</span> Listen in English (Full Explanation)
+            </button>
+            <button type="button" class="btn-audio" onclick="speakReport('bn')" style="background: #0d9488;">
+                <span>🔊</span> বাংলায় শুনুন (Bengali Voice)
+            </button>
+            <button type="button" class="btn-audio stop" onclick="stopAudio()">
+                <span>⏹</span> Stop (आवाज रोकें)
+            </button>
+        </div>
+    </div>
+
+    <div class="regional-card">
+        <div class="lang-item">
+            <strong>Diagnosis / रोग की स्थिति:</strong> {{ translation.grade_label }}
+        </div>
+        <div class="lang-item">
+            <strong>Patient Verdict / मुख्य निष्कर्ष:</strong> {{ translation.verdict }}
+        </div>
+        <div class="lang-item">
+            <strong>Recommended Action / अनुवर्ती सलाह:</strong> {{ translation.action }}
+        </div>
+        {% if translation.lesion_translations and translation.lesion_translations|length > 0 %}
+            <div class="lang-item">
+                <strong>Detected Lesions / पाए गए लक्षण:</strong>
+                <ul style="margin: 4px 0 0 18px; padding: 0;">
+                    {% for lt in translation.lesion_translations %}
+                        <li>{{ lt.original }} → <em>{{ lt.translated }}</em></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div style="font-size: 12px; color: #15803d; margin-top: 8px; font-weight: 500;">
+            • {{ translation.doctor_notice }}
+        </div>
+    </div>
+
+    <!-- 8.1 Grade-Specific Patient Precautions, Root Cause Etiology & Doctor Consultation Advisory -->
+    {% if recommendations.grade_category == 'low' %}
+    <!-- LOW GRADE (Grade 0 & 1): Dietary & Lifestyle Precautions (No Medicines Prescribed) -->
+    <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; padding: 22px 26px; margin: 24px 0; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 16px; font-weight: 800; color: #15803d; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 22px;">🥗</span>
+                    <span id="txt-sec8-low-title">मरीज के लिए सावधानियां एवं परहेज (Lifestyle Precautions & Dietary Do's & Don'ts)</span>
+                </div>
+                <div style="font-size: 12px; color: #475569; margin-top: 4px;" id="txt-sec8-low-sub">
+                    कम जोखिम स्तर (Low-Grade DR): प्राकृतिक एवं आहार नियंत्रण — किसी भी दवा की आवश्यकता के बिना प्रारंभिक रोकथाम।
+                </div>
+            </div>
+            <span style="font-size: 11px; background: #dcfce7; color: #166534; border: 1px solid #86efac; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                प्राकृतिक रोकथाम (No Medicine Required)
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Column 1: What to Avoid (Don'ts) -->
+            <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #dc2626; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>❌</span>
+                    <span id="txt-dont-heading">क्या परहेज करें / क्या न खाएं (What to Avoid / Don'ts)</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.6;">
+                    <div id="list-donts">
+                    {% for item in recommendations.donts %}
+                    <li style="margin-bottom: 6px;">{{ item }}</li>
+                    {% endfor %}
+                    </div>
+                </ul>
+            </div>
+
+            <!-- Column 2: What to Do (Do's) -->
+            <div style="background: #ffffff; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #16a34a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>✅</span>
+                    <span id="txt-do-heading">क्या करें / अनुशंसित जीवनशैली (What to Do / Healthy Habits)</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.6;">
+                    <div id="list-dos">
+                    {% for item in recommendations.dos %}
+                    <li style="margin-bottom: 6px;">{{ item }}</li>
+                    {% endfor %}
+                    </div>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Strict Non-Prescription Safety Notice -->
+        <div style="background: #fefce8; border: 1px dashed #eab308; border-radius: 6px; padding: 10px 14px; font-size: 11.5px; color: #854d0e; display: flex; align-items: flex-start; gap: 8px;">
+            <span style="font-size: 16px;">⚠️</span>
+            <div>
+                <strong>दवा संबंधी सख्त निर्देश (Non-Prescription Safety Policy):</strong>
+                {{ recommendations.medicine_disclaimer }}
+            </div>
+        </div>
+    </div>
+
+    {% elif recommendations.grade_category == 'medium' %}
+    <!-- MEDIUM GRADE (Grade 2 - Moderate NPDR): Root Cause Etiology, Strict Parhez & Ophthalmologist Referral -->
+    <div style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 10px; padding: 22px 26px; margin: 24px 0; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 17px; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 24px;">⚠️</span>
+                    <span id="txt-sec8-med-title">{{ recommendations.doctor_urgency_title }}</span>
+                </div>
+                <div style="font-size: 12.5px; color: #92400e; margin-top: 4px; font-weight: 600;">
+                    परामर्श समय सीमा (Consultation Timeline): {{ recommendations.doctor_consult_timeline }}
+                </div>
+            </div>
+            <span style="font-size: 12px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 5px 14px; border-radius: 20px; font-weight: 800; text-transform: uppercase;">
+                Moderate NPDR (Active Care Required)
+            </span>
+        </div>
+
+        <!-- Section A: Kyu Hua Hai (Etiological Root Cause) -->
+        <div style="background: #ffffff; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;">
+            <div style="font-size: 13.5px; font-weight: 800; color: #b45309; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>🔍</span>
+                <span id="txt-sec8-why-label">यह क्यों हुआ है? (रोग का मुख्य कारण / Root Cause Etiology):</span>
+            </div>
+            <p id="txt-sec8-why-content" style="margin: 0; font-size: 12.5px; color: #334155; line-height: 1.6;">
+                {{ recommendations.etiology_why }}
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Column 1: Kya Parhez Karna Hai (Precautions) -->
+            <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #c2410c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>🥗</span>
+                    <span id="txt-sec8-parhez-label">क्या परहेज करना है? (Strict Dietary & Habitual Parhez):</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.6;">
+                    <div id="list-parhez">
+                    {% for item in recommendations.parhez_precautions %}
+                    <li style="margin-bottom: 6px;">{{ item }}</li>
+                    {% endfor %}
+                    </div>
+                </ul>
+            </div>
+
+            <!-- Column 2: Doctor Action & Clinical Steps -->
+            <div style="background: #ffffff; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>🏥</span>
+                    <span id="txt-sec8-doc-label">नेत्र रोग विशेषज्ञ से मिलकर क्या जांच कराएं (Clinical Action Plan):</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.6;">
+                    <div id="list-doc-actions">
+                    {% for step in recommendations.doctor_referral_steps %}
+                    <li style="margin-bottom: 6px;"><strong>{{ step }}</strong></li>
+                    {% endfor %}
+                    </div>
+                </ul>
+                <div style="margin-top: 10px; font-size: 11.5px; color: #0369a1; background: #f0f9ff; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #0284c7;">
+                    <strong>अनुशंसित रेफरल केंद्र:</strong> {{ triage.referral_facility }}
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; font-size: 11.5px; color: #92400e;">
+            <strong>समय पर परामर्श का महत्व:</strong> ग्रेड 2 में समय पर नेत्र विशेषज्ञ द्वारा मैकुलर ओसीटी जांच कराने से पर्दे के केंद्र में सूजन (DME) की समय रहते रोकथाम संभव है। इसमें देरी न करें।
+        </div>
+    </div>
+
+    {% elif recommendations.grade_category == 'high' %}
+    <!-- HIGH GRADE (Grade 3 & 4 - Severe NPDR & PDR): Ischemic Etiology, Strict Ban on Lifting, Urgent Referral -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 10px; padding: 22px 26px; margin: 24px 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 17px; font-weight: 800; color: #b91c1c; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 24px;">🚨</span>
+                    <span id="txt-sec8-high-title">{{ recommendations.doctor_urgency_title }}</span>
+                </div>
+                <div style="font-size: 12.5px; color: #7f1d1d; margin-top: 4px; font-weight: 600;">
+                    परामर्श समय सीमा (Action Window): {{ recommendations.doctor_consult_timeline }}
+                </div>
+            </div>
+            <span style="font-size: 12px; background: #dc2626; color: #ffffff; padding: 5px 14px; border-radius: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                Urgent Specialist Referral Required
+            </span>
+        </div>
+
+        <!-- Section A: Kyu Hua Hai (Severe Ischemic Etiology) -->
+        <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;">
+            <div style="font-size: 13.5px; font-weight: 800; color: #b91c1c; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>🔍</span>
+                <span id="txt-sec8-why-high-label">गंभीर कारण: यह क्यों हुआ है? (Root Cause — Retinal Ischemia & Vascular Threat):</span>
+            </div>
+            <p id="txt-sec8-why-content" style="margin: 0; font-size: 12.5px; color: #334155; line-height: 1.6;">
+                {{ recommendations.etiology_why }}
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Column 1: Necessary Clinical Steps -->
+            <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #991b1b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>🏥</span>
+                    <span id="txt-sec8-doc-high-label">रेटिना विशेषज्ञ डॉक्टर से मिलकर क्या कराएं (Emergency Action):</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.6;">
+                    <div id="list-doc-actions">
+                    {% for step in recommendations.doctor_referral_steps %}
+                    <li style="margin-bottom: 6px;"><strong>{{ step }}</strong></li>
+                    {% endfor %}
+                    </div>
+                </ul>
+                <div style="margin-top: 10px; font-size: 11.5px; color: #0369a1; background: #f0f9ff; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #0284c7;">
+                    <strong>रेफरल केंद्र:</strong> {{ triage.referral_facility }}
+                </div>
+            </div>
+
+            <!-- Column 2: Critical Restrictions to Prevent Bleeding -->
+            <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 13px; font-weight: 800; color: #b91c1c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>⛔</span>
+                    <span id="txt-sec8-restr-label">रक्तस्राव से बचने हेतु सख्त पाबंदियां (Critical Activity Restrictions):</span>
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #991b1b; line-height: 1.6;">
+                    <div id="list-restrictions">
+                    {% for restr in recommendations.critical_restrictions %}
+                    <li style="margin-bottom: 6px;">{{ restr }}</li>
+                    {% endfor %}
+                    </div>
+                </ul>
+                <div style="margin-top: 10px; font-size: 11.5px; color: #b91c1c; background: #fff1f2; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #e11d48;">
+                    <strong>इमरजेंसी चेतावनी:</strong> यदि अचानक दृष्टि कम हो या आँखों के आगे काला पर्दा छाए, तो तुरंत आपातकालीन नेत्र केंद्र पहुंचे।
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; font-size: 11.5px; color: #991b1b;">
+            <strong>समय पर इलाज का महत्व:</strong> गंभीर रेटिनोपैथी में समय पर रेटिना विशेषज्ञ द्वारा लेजर (PRP) अथवा एंटी-वीईजीएफ इंजेक्शन दिए जाने से आँखों की रोशनी को स्थायी रूप से नष्ट होने से बचाया जा सकता है। इसमें एक दिन की भी देरी न करें।
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 9. Regulatory Traceability & Audit Trail -->
+    <div class="section-title">
+        <span data-i18n="sec9_title">9. Audit Trail & Regulatory Provenance</span>
+        <span style="font-size: 12px; color: #64748b; font-weight: normal;">ABDM / ISO Traceability</span>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 12px; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div><strong>Model Engine:</strong> {{ audit.model_name }} ({{ audit.model_version }})</div>
+            <div><strong>Image SHA-256 (prefix):</strong> {{ audit.image_sha256_short }}</div>
+            <div><strong>Compliance Standard:</strong> {{ audit.compliance_standard }}</div>
+            <div><strong>Timestamp (UTC):</strong> {{ audit.timestamp_utc }}</div>
+            <div><strong>Calibration Status:</strong> {% if calibration.status == 'calibrated' %}{{ calibration.method }}{% else %}Uncalibrated Softmax Ceiled{% endif %}</div>
+            <div><strong>Validation State:</strong> {{ audit.doctor_validation_status }}</div>
+        </div>
+    </div>
+
+    <!-- 10. Clinician Feedback & Active Learning Protocol -->
+    <div class="section-title">
+        <span id="txt-sec10-title">10. Clinician Feedback & Continuous Model Improvement Form / चिकित्सक प्रतिपुष्टि एवं मॉडल संवर्धन</span>
+        <span style="font-size: 12px; color: #0d9488; font-weight: bold;">Continuous Quality Improvement (CQI)</span>
+    </div>
+
+    <div style="background: #f0fdfa; border: 2px solid #0d9488; border-radius: 10px; padding: 22px 26px; margin-bottom: 26px; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+            <div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f766e; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">🩺</span>
+                    <span>Doctor Feedback for Model Enhancement (मॉडल सुधार हेतु डॉक्टर की राय)</span>
+                </div>
+                <div style="font-size: 12px; color: #475569; margin-top: 4px;">
+                    डॉक्टरों की राय के आधार पर AI मॉडल को और अधिक सटीक बनाने के लिए कृपया अपने क्लीनिकल निष्कर्ष दर्ज करें। यह डेटा Active Learning री-ट्रेनिंग के लिए सुरक्षित किया जाएगा।
+                </div>
+            </div>
+            <span style="font-size: 11px; background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; padding: 4px 10px; border-radius: 20px; font-weight: bold;">
+                Active Learning Loop
+            </span>
+        </div>
+
+        <form id="clinicianFeedbackForm" onsubmit="event.preventDefault(); submitClinicianFeedback();">
+            <!-- Row 1: Reviewer Credentials -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 4px;" data-i18n="lbl_fb_name">Reviewing Doctor Name</label>
+                    <input type="text" id="fbDoctorName" value="{{ phc_patient.medical_officer }}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 4px;" data-i18n="lbl_fb_spec">Clinical Specialization</label>
+                    <select id="fbSpecialty" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #fff;">
+                        <option value="Medical Officer (MBBS)" selected>Medical Officer (MBBS) - PHC/CHC</option>
+                        <option value="Consultant Ophthalmologist">Consultant Ophthalmologist (MS/DNB)</option>
+                        <option value="Vitreo-Retinal Specialist">Vitreo-Retinal Specialist (Fellow)</option>
+                        <option value="Tele-Ophthalmic Screener">Certified Tele-Ophthalmic Screener</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 4px;" data-i18n="lbl_fb_fac">Centre / Hospital Facility</label>
+                    <input type="text" id="fbFacility" value="{{ phc_patient.phc_center }}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <!-- Row 2: Diagnostic Agreement & Overriding Ground Truth -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 8px;">
+                        Model Accuracy Assessment (AI Assigned: Grade {{ model.grade }})
+                    </label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="agreementStatus" value="Agree with AI" checked>
+                            <span style="color: #166534; font-weight: 600;" data-i18n="opt_agree">✅ Agree with AI Grade</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="agreementStatus" value="Over-predicted by AI">
+                            <span style="color: #ea580c; font-weight: 600;" data-i18n="opt_over">⚠️ Over-predicted (Too Severe)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="agreementStatus" value="Under-predicted by AI">
+                            <span style="color: #dc2626; font-weight: 600;" data-i18n="opt_under">❌ Under-predicted (Missed Signs)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="agreementStatus" value="Inconclusive / Artifact">
+                            <span style="color: #64748b; font-weight: 600;" data-i18n="opt_inconclusive">⚪ Inconclusive / Poor Quality</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 8px;">
+                        <span data-i18n="lbl_fb_truth">Doctor Confirmed Ground Truth Grade</span>
+                    </label>
+                    <select id="fbDoctorGrade" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 700; background: #fff;">
+                        <option value="0" {% if model.grade == 0 %}selected{% endif %}>Grade 0: No DR (Normal)</option>
+                        <option value="1" {% if model.grade == 1 %}selected{% endif %}>Grade 1: Mild NPDR</option>
+                        <option value="2" {% if model.grade == 2 %}selected{% endif %}>Grade 2: Moderate NPDR</option>
+                        <option value="3" {% if model.grade == 3 %}selected{% endif %}>Grade 3: Severe NPDR</option>
+                        <option value="4" {% if model.grade == 4 %}selected{% endif %}>Grade 4: Proliferative DR (PDR)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Grad-CAM Explainability Clinical Utility -->
+            <div style="background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 8px;">
+                    <span data-i18n="lbl_fb_gradcam">Grad-CAM Explainability Utility</span>
+                </label>
+                <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gradcamUtility" value="Accurately Localized True Lesions" checked>
+                        <span>🎯 Accurately highlighted true microvascular lesions</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gradcamUtility" value="Partially Useful">
+                        <span>🔍 Partially useful (diffuse focus / broad retinal area)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gradcamUtility" value="Inaccurate / Focused on Artifact">
+                        <span>⚠️ Inaccurate (highlighted optic disc, camera glare, or normal vessels)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Row 4: Doctor-Observed Lesions Checklist -->
+            <div style="background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 8px;">
+                    <span data-i18n="lbl_fb_check">Observed Pathologies / Biomarkers in this Retinal Scan:</span>
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 12px; color: #334155;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Microaneurysms" {% if model.grade >= 1 %}checked{% endif %}> Microaneurysms (सूक्ष्म रक्तवाहिका उभार)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Blot Hemorrhages" {% if model.grade >= 2 %}checked{% endif %}> Dot / Blot Hemorrhages (रक्त स्राव)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Hard Exudates" {% if model.grade >= 2 %}checked{% endif %}> Hard Lipid Exudates (पीले लिपिड जमाव)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Cotton Wool Spots"> Cotton Wool Spots (इस्कीमिया)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Venous Beading" {% if model.grade >= 3 %}checked{% endif %}> Venous Beading (नस विसंगति)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="IRMA" {% if model.grade >= 3 %}checked{% endif %}> IRMA (असामान्य वाहिकाएं)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Neovascularization" {% if model.grade == 4 %}checked{% endif %}> Neovascularization (NVD/NVE)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Macular Edema / DME"> Macular Edema (मैक्युलर सूजन)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="lesionCheck" value="Cataract / Media Haze"> Cataract / Media Haze Artifact
+                    </label>
+                </div>
+            </div>
+
+            <!-- Row 5: Suggestions for Model Improvement -->
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 4px;">
+                    <span data-i18n="lbl_fb_notes">Clinical Notes & Recommendations for Model Retraining:</span>
+                </label>
+                <textarea id="fbImprovementNotes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; font-family: inherit; box-sizing: border-box;" placeholder="उदा. मॉडल ने मोतियाबिंद की धुंध को लीज़न समझ लिया / डिस्क के पास सूक्ष्म ब्लीड मिस हो गया / इस तरह के केस का और डेटा जोड़ें..."></textarea>
+            </div>
+
+            <!-- Row 6: Consent Checkbox & Action Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; cursor: pointer;">
+                    <input type="checkbox" id="fbRetrainingConsent" checked>
+                    <span>Tag this anonymized case for <strong>Continuous AI Retraining & Edge-Case Benchmark</strong>.</span>
+                </label>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-audio" onclick="submitClinicianFeedback()" style="background: #0d9488;">
+                        <span>💾</span> Submit & Save Feedback (फीडबैक दर्ज करें)
+                    </button>
+                    <button type="button" class="btn-audio" onclick="downloadFeedbackJSON()" style="background: #0369a1;">
+                        <span>⬇️</span> Export JSON (डेटा डाउनलोड करें)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success Alert Banner -->
+            <div id="feedbackSuccessAlert" style="display: none; margin-top: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                <span data-i18n="fb_success">✅ डॉक्टर का फीडबैक सफलतापूर्वक सुरक्षित कर लिया गया है! यह रिकॉर्ड मॉडल री-ट्रेनिंग डेटासेट में जोड़ दिया गया है।</span>
+            </div>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+        CONFIDENTIAL MEDICAL SCREENING RECORD • AI IS AN ASSISTIVE TRIAGE TOOL AND DOES NOT REPLACE DIRECT OPHTHALMIC EXAMINATION • REPORT VER {{ audit.report_version }}
+    </div>
+</div>
+
+<!-- Voice Assistant Audio Script & Clinician Feedback Handler -->
+<script>
+let currentUtterance = null;
+let allVoices = [];
+
+function loadVoices() {
+    allVoices = window.speechSynthesis.getVoices();
+}
+loadVoices();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+const detailedNarratives = {
+    hi: {{ translation.audio_narrative.hi | tojson }},
+    hinglish: {{ translation.audio_narrative.hinglish | tojson }},
+    en: {{ translation.audio_narrative.en | tojson }},
+    bn: {{ translation.audio_narrative.bn | tojson }}
+};
+
+function speakReport(mode) {
+    if (!('speechSynthesis' in window)) {
+        alert("आपका ब्राउज़र वॉइस सपोर्ट नहीं करता। कृपया Google Chrome, Microsoft Edge या Safari का उपयोग करें।");
+        return;
+    }
+    
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    if (allVoices.length === 0) {
+        allVoices = window.speechSynthesis.getVoices();
+    }
+    
+    let textToSpeak = "";
+    let targetLang = "en-US";
+    let selectedVoice = null;
+    let label = "ऑडियो चल रहा है...";
+
+    // Detect if browser has native Hindi voice
+    const hindiVoice = allVoices.find(v => 
+        (v.lang && (v.lang.toLowerCase().includes('hi') || v.lang.toLowerCase().startsWith('hi'))) ||
+        (v.name && (v.name.includes('Hindi') || v.name.includes('हिन्दी') || v.name.includes('Swara') || v.name.includes('Madhur')))
+    );
+
+    // Detect if browser has native Bengali voice
+    const bengaliVoice = allVoices.find(v => 
+        (v.lang && (v.lang.toLowerCase().includes('bn') || v.lang.toLowerCase().startsWith('bn'))) ||
+        (v.name && (v.name.includes('Bengali') || v.name.includes('বাংলা') || v.name.includes('Bashkar') || v.name.includes('Tanishaa')))
+    );
+
+    // Default English voice
+    const englishVoice = allVoices.find(v => 
+        v.lang && (v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('en-us') || v.lang.toLowerCase().startsWith('en'))
+    ) || allVoices[0];
+
+    if (mode === 'hi') {
+        if (hindiVoice) {
+            textToSpeak = detailedNarratives.hi;
+            targetLang = hindiVoice.lang || 'hi-IN';
+            selectedVoice = hindiVoice;
+            label = "हिंदी में पूरा विवरण चल रहा है...";
+        } else {
+            textToSpeak = detailedNarratives.hinglish;
+            targetLang = 'en-US';
+            selectedVoice = englishVoice;
+            label = "आसान बोलचाल हिंदी में विवरण चल रहा है...";
+        }
+    } else if (mode === 'hinglish') {
+        textToSpeak = detailedNarratives.hinglish;
+        targetLang = 'en-US';
+        selectedVoice = englishVoice;
+        label = "आसान बोलचाल हिंदी में विवरण चल रहा है...";
+    } else if (mode === 'bn') {
+        if (bengaliVoice) {
+            textToSpeak = detailedNarratives.bn;
+            targetLang = bengaliVoice.lang || 'bn-IN';
+            selectedVoice = bengaliVoice;
+            label = "বাংলায় संपूर्ण विवरण চলছে...";
+        } else {
+            textToSpeak = detailedNarratives.hinglish;
+            targetLang = 'en-US';
+            selectedVoice = englishVoice;
+            label = "विवरण चल रहा है...";
+        }
+    } else { // mode === 'en'
+        textToSpeak = detailedNarratives.en;
+        targetLang = 'en-US';
+        selectedVoice = englishVoice;
+        label = "Playing comprehensive medical explanation in English...";
+    }
+    
+    currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
+    currentUtterance.lang = targetLang;
+    currentUtterance.rate = 0.90;
+    currentUtterance.pitch = 1.0;
+    
+    if (selectedVoice) {
+        currentUtterance.voice = selectedVoice;
+    }
+    
+    const statusBox = document.getElementById('audioStatus');
+    const statusText = document.getElementById('audioStatusText');
+    
+    currentUtterance.onstart = function() {
+        if (statusBox) {
+            statusBox.style.display = 'inline-flex';
+            statusText.innerText = label;
+        }
+    };
+    
+    currentUtterance.onend = function() {
+        if (statusBox) statusBox.style.display = 'none';
+    };
+    
+    currentUtterance.onerror = function() {
+        if (statusBox) statusBox.style.display = 'none';
+    };
+    
+    window.speechSynthesis.speak(currentUtterance);
+}
+
+function stopAudio() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const statusBox = document.getElementById('audioStatus');
+        if (statusBox) statusBox.style.display = 'none';
+    }
+}
+
+// ----------------------------------------------------------------------
+// CLINICIAN FEEDBACK & ACTIVE LEARNING EXPORT HANDLER
+// ----------------------------------------------------------------------
+function getFeedbackPayload() {
+    const doctorName = document.getElementById('fbDoctorName').value || 'Anonymous Clinician';
+    const specialty = document.getElementById('fbSpecialty').value;
+    const facility = document.getElementById('fbFacility').value;
+    const agreementRadio = document.querySelector('input[name="agreementStatus"]:checked');
+    const agreementStatus = agreementRadio ? agreementRadio.value : 'Agree with AI';
+    const doctorGrade = parseInt(document.getElementById('fbDoctorGrade').value, 10);
+    const gradcamRadio = document.querySelector('input[name="gradcamUtility"]:checked');
+    const gradcamUtility = gradcamRadio ? gradcamRadio.value : 'Not Rated';
+    
+    const reportedLesions = [];
+    document.querySelectorAll('input[name="lesionCheck"]:checked').forEach(cb => {
+        reportedLesions.push(cb.value);
+    });
+
+    const notes = document.getElementById('fbImprovementNotes').value.trim();
+    const retrainingConsent = document.getElementById('fbRetrainingConsent').checked;
+
+    return {
+        patient_id: {{ phc_patient.patient_id | tojson }},
+        screening_date: {{ phc_patient.screening_date | tojson }},
+        ai_grade: {{ model.grade }},
+        ai_confidence_pct: {{ calibration.raw_percentage }},
+        doctor_name: doctorName,
+        specialization: specialty,
+        phc_facility: facility,
+        agreement_status: agreementStatus,
+        doctor_grade: doctorGrade,
+        gradcam_utility: gradcamUtility,
+        reported_lesions: reportedLesions,
+        improvement_notes: notes,
+        include_in_retraining: retrainingConsent,
+        submitted_at: new Date().toISOString()
+    };
+}
+
+
+
+// =============================================================================
+// COMPREHENSIVE MULTILINGUAL ENGINE (English, Hindi, Marathi, Tulu)
+// =============================================================================
+const I18N_FULL = {
+    "en": {
+        "top_banner": "PHC CLINICAL DECISION SUPPORT SYSTEM — FOR USE BY MEDICAL OFFICERS & TELE-OPHTHALMOLOGISTS",
+        "report_title": "Diabetic Retinopathy Clinical Screening Report",
+        "sub_title": "Ayushman Bharat Digital Health Mission (ABDM) • Primary Care Ophthalmic Tele-Triage",
+        "lang_bar_label": "Report Language / भाषा / ಭಾಷೆ:",
+        "grade_switch_label": "👁️ Test DR Grade View / ग्रेड देखें:",
+
+        "lbl_patient_id": "Patient ID & Name",
+        "lbl_age_gender": "Age / Gender",
+        "lbl_laterality": "Laterality (Eye)",
+        "lbl_camera": "Camera / Modality",
+        "lbl_hba1c": "Glycated Hemoglobin (HbA1c)",
+        "lbl_target_hba1c": "Target < 7.0%",
+        "lbl_bp": "Blood Pressure (BP)",
+        "lbl_dm_duration": "DM Duration / History",
+        "lbl_va": "Visual Acuity (BCVA)",
+
+        "sec1_title": "1. AI Screening Summary & 5-Class Probability Distribution",
+        "lbl_assigned_grade": "Assigned Grade",
+        "lbl_raw_prob": "Raw Softmax Probability",
+        "lbl_calib_conf": "Calibrated Confidence",
+        "lbl_urgency": "Referral Urgency",
+        "th_icdr": "ICDR Severity Classification",
+        "th_prob": "Softmax Probability",
+        "th_dist": "Differential Confidence Distribution",
+        "th_align": "Clinical Stage Alignment",
+
+        "sec1_1_title": "1.1 Pure Fundus Retinal Feature Quantification Panel ('Excess / Deficient / Normal')",
+        "th_feat": "Retinal Feature & Pathology (Biomarker)",
+        "th_obs": "Observed on Fundus (Measured)",
+        "th_norm": "Healthy Baseline (Standard Range)",
+        "th_dev": "Retinal Status ('Excess / Deficient / Normal')",
+        "th_imp": "Clinical Significance on Retina",
+        "th_tech": "Detection Technique",
+
+        "sec2_title": "2. Fundus Image & AI Explainability (Grad-CAM)",
+        "card_orig": "1. Raw Fundus Photo",
+        "card_enh": "2. Enhanced Fundus (CLAHE)",
+        "card_gradcam": "3. Grad-CAM Activation Heatmap",
+        "card_overlay": "4. Heatmap Overlay on Retina",
+
+        "sec3_title": "3. Image Quality Assessment & Diagnostic Acceptability",
+        "sec4_title": "4. Quantitative Lesion Distribution & Clinical Findings",
+        "sec5_title": "5. International Clinical Diabetic Retinopathy (ICDR) Criteria Reference",
+        "sec6_title": "6. Primary Care Tele-Triage & Clinical Referral Pathway",
+        "sec7_title": "7. Medical Officer / Ophthalmologist Review & Verification",
+        "chk_agree": "<strong>Agree:</strong> Confirm AI Grade and reported clinical findings.",
+        "chk_modify": "<strong>Modify:</strong> Override Grade to: [ ] 0  [ ] 1  [ ] 2  [ ] 3  [ ] 4",
+        "chk_reject": "<strong>Reject:</strong> Inconclusive / Image quality unacceptable / Dilated exam required.",
+        "lbl_notes": "Physician Clinical Notes:",
+        "lbl_sig": "Doctor Signature & Registration Stamp",
+
+        "sec8_title": "8. Patient Counseling & Vernacular Voice Assistant",
+        "audio_title": "Voice Assistant (Listen to Spoken Report)",
+        "audio_play_note": "• <strong>Press Play (▶):</strong> Listen to the clinical report explained politely in simple terms.",
+
+        "txt-sec8-low-title": "Patient Lifestyle Precautions & Dietary Do's & Don'ts (No Medicine Prescribed)",
+        "txt-sec8-low-sub": "Low-Grade DR: Pure dietary and lifestyle control — natural prevention without pharmacological drugs.",
+        "txt-dont-heading": "What to Avoid / Don'ts (Strict Parhez):",
+        "txt-do-heading": "What to Do / Healthy Habits (Do's):",
+
+        "txt-sec8-why-label": "Why did this happen? (Root Cause Etiology):",
+        "txt-sec8-why-high-label": "Critical Root Cause: Retinal Ischemia & Vascular Hypoxia:",
+        "txt-sec8-parhez-label": "What to Avoid & Precautions (Dietary & Habitual Parhez):",
+        "txt-sec8-doc-label": "Ophthalmologist Action Plan (Specialist Investigations):",
+        "txt-sec8-doc-high-label": "Retina Specialist Emergency Action Plan:",
+        "txt-sec8-restr-label": "Critical Restrictions (Avoid Vitreous Bleeding):",
+
+        "sec9_title": "9. Audit Trail & Regulatory Provenance",
+        "sec10_title": "10. Clinician Feedback & Continuous Model Improvement Form",
+        "lbl_fb_name": "Reviewing Doctor Name",
+        "lbl_fb_spec": "Clinical Specialization",
+        "lbl_fb_fac": "Centre / Hospital Facility",
+        "opt_agree": "✅ Agree with AI Grade",
+        "opt_over": "⚠️ Over-predicted by AI (Too Severe)",
+        "opt_under": "❌ Under-predicted by AI (Missed Signs)",
+        "opt_inconclusive": "⚪ Inconclusive / Poor Quality",
+        "lbl_fb_truth": "Doctor Confirmed Ground Truth Grade",
+        "lbl_fb_gradcam": "Grad-CAM Explainability Utility",
+        "lbl_fb_check": "Observed Pathologies / Biomarkers in this Retinal Scan:",
+        "lbl_fb_notes": "Clinical Notes & Recommendations for Model Retraining:",
+        "btn_fb_submit": "Submit Doctor Feedback for Model Retraining",
+        "fb_success": "Doctor feedback saved successfully! This record has been added to the Active Learning retraining dataset."
+    },
+
+    "hi": {
+        "top_banner": "प्राथमिक स्वास्थ्य केंद्र क्लीनिकल निर्णय सहायता प्रणाली — चिकित्सा अधिकारियों एवं टेली-नेत्र रोग विशेषज्ञों हेतु",
+        "report_title": "डायबिटिक रेटिनोपैथी क्लीनिकल स्क्रीनिंग रिपोर्ट",
+        "sub_title": "आयुष्मान भारत डिजिटल स्वास्थ्य मिशन (ABDM) • प्राथमिक देखभाल नेत्र टेली-ट्राइएज",
+        "lang_bar_label": "रिपोर्ट की भाषा चुनें / Select Language / भाषा निवडा / ಭಾಷೆ ಆಯ್ಕೆ:",
+        "grade_switch_label": "👁️ ग्रेड सैंपल देखें (View DR Grade):",
+
+        "lbl_patient_id": "मरीज की आईडी एवं नाम",
+        "lbl_age_gender": "आयु / लिंग",
+        "lbl_laterality": "जांची गई आँख",
+        "lbl_camera": "कैमरा / उपकरण",
+        "lbl_hba1c": "ग्लाइकेटेड हीमोग्लोबिन (HbA1c)",
+        "lbl_target_hba1c": "लक्ष्य < 7.0%",
+        "lbl_bp": "रक्तचाप (BP)",
+        "lbl_dm_duration": "डायबिटीज की अवधि / इतिहास",
+        "lbl_va": "दृष्टि तीक्ष्णता (BCVA)",
+
+        "sec1_title": "1. AI स्क्रीनिंग सारांश एवं 5-श्रेणी संभावना वितरण",
+        "lbl_assigned_grade": "निर्धारित ग्रेड",
+        "lbl_raw_prob": "रॉ सॉफ्टमैक्स संभावना",
+        "lbl_calib_conf": "कैलिब्रेटेड विश्वसनीयता",
+        "lbl_urgency": "रेफरल प्राथमिकता",
+        "th_icdr": "ICDR गंभीरता वर्गीकरण",
+        "th_prob": "सॉफ्टमैक्स संभावना",
+        "th_dist": "संभावना वितरण चार्ट",
+        "th_align": "क्लीनिकल लक्षण सामंजस्य",
+
+        "sec1_1_title": "1.1 फंडस रेटिना फीचर्स पैनल ('क्या ज्यादा है / क्या कम है / क्या सामान्य है')",
+        "th_feat": "रेटिना का फीचर व लक्षण (बायोमार्कर)",
+        "th_obs": "फंडस पर मिला (है इतना)",
+        "th_norm": "सामान्य स्तर (होना चाहिए इतना)",
+        "th_dev": "रेटिना स्थिति ('क्या ज्यादा / क्या कम / क्या सामान्य')",
+        "th_imp": "रेटिना पर क्लीनिकल प्रभाव",
+        "th_tech": "डिटेक्शन विधि",
+
+        "sec2_title": "2. फंडस इमेज एवं AI व्याख्या (Grad-CAM हीटमैप)",
+        "card_orig": "1. मूल फंडस तस्वीर",
+        "card_enh": "2. उन्नत CLAHE फंडस तस्वीर",
+        "card_gradcam": "3. Grad-CAM सक्रियता हीटमैप",
+        "card_overlay": "4. हीटमैप ओवरले तस्वीर",
+
+        "sec3_title": "3. इमेज गुणवत्ता मूल्यांकन एवं नैदानिक स्वीकार्यता",
+        "sec4_title": "4. रेटिना घाव (Lesions) वितरण एवं क्लीनिकल बायोमार्कर्स",
+        "sec5_title": "5. अंतर्राष्ट्रीय क्लीनिकल डायबिटिक रेटिनोपैथी (ICDR) मानक संदर्भ",
+        "sec6_title": "6. प्राथमिक स्वास्थ्य केंद्र टेली-ट्राइएज एवं रेफरल मार्गदर्शिका",
+        "sec7_title": "7. चिकित्सा अधिकारी / नेत्र रोग विशेषज्ञ समीक्षा एवं सत्यापन",
+        "chk_agree": "<strong>सहमति:</strong> AI ग्रेड और क्लीनिकल निष्कर्षों की पुष्टि करते हैं।",
+        "chk_modify": "<strong>संशोधन:</strong> ग्रेड बदलकर करें: [ ] 0  [ ] 1  [ ] 2  [ ] 3  [ ] 4",
+        "chk_reject": "<strong>अस्वीकृति:</strong> अनिर्णायक / इमेज गुणवत्ता खराब / पुतली फैलाकर प्रत्यक्ष जांच आवश्यक।",
+        "lbl_notes": "चिकित्सक के क्लीनिकल नोट्स:",
+        "lbl_sig": "डॉक्टर के हस्ताक्षर एवं मुहर",
+
+        "sec8_title": "8. मरीज परामर्श एवं क्षेत्रीय भाषा ध्वनि सारांश",
+        "audio_title": "वॉइस असिस्टेंट (बोलकर सुनें)",
+        "audio_play_note": "• <strong>प्ले (Play ▶) बटन दबाएं:</strong> यह आवाज़ बिल्कुल वैसे ही समझाएगी जैसे भारत में डॉक्टर मरीज से बात करते हैं।",
+
+        "txt-sec8-low-title": "मरीज के लिए सावधानियां एवं परहेज (Lifestyle Precautions & Dietary Do's & Don'ts)",
+        "txt-sec8-low-sub": "कम जोखिम स्तर (Low-Grade DR): प्राकृतिक एवं आहार नियंत्रण — किसी भी दवा की आवश्यकता के बिना प्रारंभिक रोकथाम।",
+        "txt-dont-heading": "क्या परहेज करें / क्या न खाएं (Don'ts):",
+        "txt-do-heading": "क्या करें / अनुशंसित जीवनशैली (Do's):",
+
+        "txt-sec8-why-label": "यह क्यों हुआ है? (रोग का मुख्य कारण / Root Cause Etiology):",
+        "txt-sec8-why-high-label": "गंभीर कारण: यह क्यों हुआ है? (रेटिना इस्कीमिया व वाहिका खतरा):",
+        "txt-sec8-parhez-label": "क्या परहेज करना है? (खानपान व जीवनशैली परहेज):",
+        "txt-sec8-doc-label": "नेत्र रोग विशेषज्ञ से मिलकर क्या जांच कराएं:",
+        "txt-sec8-doc-high-label": "रेटिना विशेषज्ञ डॉक्टर से मिलकर क्या कराएं:",
+        "txt-sec8-restr-label": "रक्तस्राव से बचने हेतु सख्त पाबंदियां:",
+
+        "sec9_title": "9. ऑडिट ट्रेल एवं विनियामक प्रमाणिकता",
+        "sec10_title": "10. चिकित्सक प्रतिपुष्टि एवं मॉडल संवर्धन फॉर्म",
+        "lbl_fb_name": "समीक्षा करने वाले डॉक्टर का नाम",
+        "lbl_fb_spec": "क्लीनिकल विशेषज्ञता",
+        "lbl_fb_fac": "स्वास्थ्य केंद्र / अस्पताल का नाम",
+        "opt_agree": "✅ AI ग्रेड से सहमत हैं",
+        "opt_over": "⚠️ AI ने जरूरत से ज्यादा गंभीर बताया",
+        "opt_under": "❌ AI ने कम आंका (लक्षण छूट गए)",
+        "opt_inconclusive": "⚪ अनिर्णायक / धुंधली तस्वीर",
+        "lbl_fb_truth": "डॉक्टर द्वारा प्रमाणित सही ग्रेड",
+        "lbl_fb_gradcam": "Grad-CAM हीटमैप की क्लीनिकल उपयोगिता",
+        "lbl_fb_check": "रेटिना में दिखे लक्षण चेकलिस्ट:",
+        "lbl_fb_notes": "मॉडल सुधार एवं री-ट्रेनिंग हेतु क्लीनिकल सुझाव:",
+        "btn_fb_submit": "मॉडल सुधार हेतु डॉक्टर फीडबैक सबमिट करें",
+        "fb_success": "डॉक्टर का फीडबैक सफलतापूर्वक सुरक्षित कर लिया गया है! यह रिकॉर्ड मॉडल री-ट्रेनिंग डेटासेट में जोड़ दिया गया है।"
+    },
+
+    "mr": {
+        "top_banner": "प्राथमिक आरोग्य केंद्र वैद्यकीय निर्णय सहाय्य प्रणाली — वैद्यकीय अधिकारी व नेत्रतज्ज्ञांसाठी",
+        "report_title": "मधुमेही रेटिनोपॅथी तपासणी अहवाल",
+        "sub_title": "आयुष्मान भारत डिजिटल आरोग्य अभियान (ABDM) • प्राथमिक नेत्र तपासणी ट्राइएज",
+        "lang_bar_label": "अहवालाची भाषा निवडा / Select Language / भाषा निवडा / ಭಾಷೆ ಆಯ್ಕೆ:",
+        "grade_switch_label": "👁️ ग्रेडचे नमुने पहा (View DR Grade):",
+
+        "lbl_patient_id": "रुग्णाचा आयडी व नाव",
+        "lbl_age_gender": "वय / लिंग",
+        "lbl_laterality": "तपासलेला डोळा",
+        "lbl_camera": "कॅमेरा / उपकरण",
+        "lbl_hba1c": "ग्लायकेटेड हिमोग्लोबिन (HbA1c)",
+        "lbl_target_hba1c": "ध्येय < 7.0%",
+        "lbl_bp": "रक्तदाब (BP)",
+        "lbl_dm_duration": "मधुमेहाचा कालावधी / इतिहास",
+        "lbl_va": "दृष्टी क्षमता (BCVA)",
+
+        "sec1_title": "1. AI तपासणी सारांश आणि 5-टक्केवारी संभाव्यता वितरण",
+        "lbl_assigned_grade": "नियुक्त ग्रेड",
+        "lbl_raw_prob": "सॉफ्टमॅक्स संभाव्यता",
+        "lbl_calib_conf": "कॅलिब्रेटेड अचूकता",
+        "lbl_urgency": "रेफरल तातडी",
+        "th_icdr": "ICDR तीव्रता वर्गीकरण",
+        "th_prob": "संभाव्यता",
+        "th_dist": "संभाव्यता वितरण चार्ट",
+        "th_align": "वैद्यकीय लक्षणे",
+
+        "sec1_1_title": "1.1 रेटिना वैशिष्ट्ये मोजणी फलक ('काय जास्त आहे / काय कमी आहे / काय सामान्य आहे')",
+        "th_feat": "रेटिना लक्षण व विकार (बायोमार्कर)",
+        "th_obs": "तपासणीत आढळलेले (आहे इतके)",
+        "th_norm": "सामान्य मर्यादा (असावे इतके)",
+        "th_dev": "रेटिना स्थिती ('काय जास्त / काय कमी / काय सामान्य')",
+        "th_imp": "डोळ्यांवर होणारा वैद्यकीय परिणाम",
+        "th_tech": "तपासणी तंत्र",
+
+        "sec2_title": "2. फंडस प्रतिमा आणि AI स्पष्टीकरण (Grad-CAM हीटमॅप)",
+        "card_orig": "1. मूळ फंडस प्रतिमा",
+        "card_enh": "2. वर्धित CLAHE प्रतिमा",
+        "card_gradcam": "3. Grad-CAM हीटमॅप",
+        "card_overlay": "4. हीटमॅप ओव्हरले प्रतिमा",
+
+        "sec3_title": "3. प्रतिमा गुणवत्ता मूल्यांकन व स्वीकार्यता",
+        "sec4_title": "4. रेटिना जखमा वितरण व बायोमार्कर्स",
+        "sec5_title": "5. आंतरराष्ट्रीय ICDR प्रमाणक संदर्भ",
+        "sec6_title": "6. प्राथमिक आरोग्य केंद्र ट्राइएज व रेफरल",
+        "sec7_title": "7. वैद्यकीय अधिकारी / नेत्रतज्ज्ञ तपासणी व पडताळणी",
+        "chk_agree": "<strong>सहमती:</strong> AI ग्रेड आणि निष्कर्षांची पुष्टी करतो.",
+        "chk_modify": "<strong>बदल:</strong> ग्रेड बदलून करा: [ ] 0  [ ] 1  [ ] 2  [ ] 3  [ ] 4",
+        "chk_reject": "<strong>नाकारणे:</strong> अनिर्णायक / अस्पष्ट प्रतिमा / प्रत्यक्ष तपासणी आवश्यक.",
+        "lbl_notes": "डॉक्टरांच्या वैद्यकीय नोंदी:",
+        "lbl_sig": "डॉक्टरांची स्वाक्षरी व शिक्का",
+
+        "sec8_title": "8. रुग्ण समुपदेशन आणि ऑडिओ सहाय्यक",
+        "audio_title": "व्हॉइस असिस्टंट (ऐकून घ्या)",
+        "audio_play_note": "• <strong>प्ले (Play ▶) बटण दाबा:</strong> डॉक्टर रुग्णाशी ज्याप्रमाणे बोलतात तसा संपूर्ण तपशील ऐका.",
+
+        "txt-sec8-low-title": "रुग्णांसाठी खबरदारी आणि आहारातील पथ्ये (औषधांशिवाय नैसर्गिक प्रतिबंध)",
+        "txt-sec8-low-sub": "कमी धोका पातळी: नैसर्गिक व आहार नियंत्रण — कोणत्याही औषधाशिवाय सुरुवातीचा प्रतिबंध.",
+        "txt-dont-heading": "काय टाळावे / काय खाऊ नये (Don'ts):",
+        "txt-do-heading": "काय करावे / आरोग्यदायी सवयी (Do's):",
+
+        "txt-sec8-why-label": "हे का झाले आहे? (आजाराचे मूळ कारण):",
+        "txt-sec8-why-high-label": "गंभीर कारण: हे का झाले आहे? (रेटिना इस्केमिया व वाहिका धोका):",
+        "txt-sec8-parhez-label": "काय पथ्य पाळावे? (आहार व सवयींचे पथ्य):",
+        "txt-sec8-doc-label": "नेत्रतज्ज्ञांना भेटून काय तपासणी करावी:",
+        "txt-sec8-doc-high-label": "रेटिना तज्ज्ञांना भेटून काय उपचार करावेत:",
+        "txt-sec8-restr-label": "रक्तस्राव टाळण्यासाठी कडक निर्बंध:",
+
+        "sec9_title": "9. ऑडिट ट्रेल व नियामक नोंद",
+        "sec10_title": "10. डॉक्टरांचा अभिप्राय आणि मॉडेल सुधारणा फॉर्म",
+        "lbl_fb_name": "तपासणी करणाऱ्या डॉक्टरांचे नाव",
+        "lbl_fb_spec": "वैद्यकीय तज्ज्ञता",
+        "lbl_fb_fac": "आरोग्य केंद्र / रुग्णालय",
+        "opt_agree": "✅ AI ग्रेडशी सहमत",
+        "opt_over": "⚠️ AI कडून प्रमाणापेक्षा जास्त भाकीत",
+        "opt_under": "❌ AI कडून दुर्लक्ष झाले (लक्षणे सुटली)",
+        "opt_inconclusive": "⚪ अनिर्णायक / अस्पष्ट प्रतिमा",
+        "lbl_fb_truth": "डॉक्टरांनी प्रमाणित केलेला खरा ग्रेड",
+        "lbl_fb_gradcam": "हीटमॅपची उपयुक्तता",
+        "lbl_fb_check": "दिसलेली लक्षणे चेकलिस्ट:",
+        "lbl_fb_notes": "मॉडेल सुधारण्यासाठी वैद्यकीय सूचना:",
+        "btn_fb_submit": "मॉडेल सुधारण्यासाठी अभिप्राय नोंदवा",
+        "fb_success": "डॉक्टरांचा अभिप्राय सुरक्षित करण्यात आला आहे! हा डेटा री-ट्रेनिंगसाठी जोडला गेला आहे."
+    },
+
+    "tcy": {
+        "top_banner": "ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ ಕ್ಲಿನಿಕಲ್ ನಿರ್ಧಾರ ಬೆಂಬಲ ವ್ಯವಸ್ಥೆ — ವೈದ್ಯಾಧಿಕಾರಿಲು ಬೊಕ್ಕ ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೇಗ್ ಬೋಡಾದ್",
+        "report_title": "ಡಯಾಬಿಟಿಕ್ ರೆಟಿನೋಪತಿ ಕ್ಲಿನಿಕಲ್ ತಪಾಸಣೆ ವರದಿ",
+        "sub_title": "ಆಯುಷ್ಮಾನ್ ಭಾರತ್ ಡಿಜಿಟಲ್ ಹೆಲ್ತ್ ಮಿಷನ್ (ABDM) • ಕಣ್ಣ್ದ ಪ್ರಾಥಮಿಕ ಟೆಲಿ-ಟ್ರಯಾಜ್",
+        "lang_bar_label": "ವರದಿದ ಭಾಷೆ ಆಯ್ಕೆ ಮಲ್ಪುಲೆ / Select Language / भाषा निवडा / भाषा चुनें:",
+        "grade_switch_label": "👁️ ಗ್ರೇಡ್ ತೂಲೆ (View DR Grade):",
+
+        "lbl_patient_id": "ರೋಗಿನ ಐಡಿ ಬೊಕ್ಕ ಪುದರ್",
+        "lbl_age_gender": "ಪ್ರಾಯ / ಲಿಂಗ",
+        "lbl_laterality": "ಪರೀಕ್ಷೆ ಮಲ್ತಿನ ಕಣ್ಣ್",
+        "lbl_camera": "ಕ್ಯಾಮೆರಾ ಉಪಕರಣ",
+        "lbl_hba1c": "ಸಕ್ಕರೆ ಮಟ್ಟ (HbA1c)",
+        "lbl_target_hba1c": "ಗುರಿ < 7.0%",
+        "lbl_bp": "ರಕ್ತದೊತ್ತಡ (BP)",
+        "lbl_dm_duration": "ಸಕ್ಕರೆ ಸೀಕ್ದ ಕಾಲ / ಇತಿಹಾಸ",
+        "lbl_va": "ದೃಷ್ಟಿ ಸಾಮರ್ಥ್ಯ (BCVA)",
+
+        "sec1_title": "1. AI ತಪಾಸಣೆ ಸಾರಾಂಶ ಬೊಕ್ಕ 5-ಹಂತದ ಸಂಭವನೀಯತೆ ಹಂಚಿಕೆ",
+        "lbl_assigned_grade": "ತೀರ್ಮಾನ ಮಲ್ತಿನ ಗ್ರೇಡ್",
+        "lbl_raw_prob": "ಸಂಭವನೀಯತೆ",
+        "lbl_calib_conf": "ಖಚಿತ ನಂಬಿಕೆ",
+        "lbl_urgency": "ಆಸ್ಪತ್ರೆಗ್ ಪೋಪಿನ ತುರ್ತು",
+        "th_icdr": "ICDR ತೀವ್ರತೆ ವರ್ಗೀಕರಣ",
+        "th_prob": "ಸಂಭವನೀಯತೆ",
+        "th_dist": "ಸಂಭವನೀಯತೆ ಹಂಚಿಕೆ",
+        "th_align": "ಕ್ಲಿನಿಕಲ್ ಲಕ್ಷಣಲು",
+
+        "sec1_1_title": "1.1 ರೆಟಿನಾ ಲಕ್ಷಣ ಪ್ರಮಾಣ ಫಲಕ ('ದಾದ ಜಾಸ್ತಿ ಉಂಡು / ದಾದ ಕಮ್ಮಿ ಉಂಡು / ದಾದ ಸಮ ಉಂಡು')",
+        "th_feat": "ರೆಟಿನಾ ಲಕ್ಷಣ (ಬಯೋಮಾರ್ಕರ್)",
+        "th_obs": "ತೂತಿನ ಮೌಲ್ಯ (ಉಂಡು)",
+        "th_norm": "ಸಾಮಾನ್ಯ ಮಿತಿ (ಬೋಡಾಯಿನಾತ್)",
+        "th_dev": "ರೆಟಿನಾ ಸ್ಥಿತಿ ('ದಾದ ಜಾಸ್ತಿ / ಕಮ್ಮಿ / ಸಮ')",
+        "th_imp": "ಕಣ್ಣ್ದ ಮಿತ್ತ್ ಆಪಿನ ಪರಿಣಾಮ",
+        "th_tech": "ಪತ್ತೆ ಮಲ್ಪುನ ವಿಧಾನ",
+
+        "sec2_title": "2. ಕಣ್ಣ್ದ ಫೋಟೋ ಬೊಕ್ಕ AI ವಿವರಣೆ (Grad-CAM ಹೀಟ್‌ಮ್ಯಾಪ್)",
+        "card_orig": "1. ಮೂಲ ಕಣ್ಣ್ದ ಫೋಟೋ",
+        "card_enh": "2. ಸ್ಪಷ್ಟ CLAHE ಫೋಟೋ",
+        "card_gradcam": "3. Grad-CAM ಹೀಟ್‌ಮ್ಯಾಪ್",
+        "card_overlay": "4. ಹೀಟ್‌ಮ್ಯಾಪ್ ಓವರ್‌ಲೇ",
+
+        "sec3_title": "3. ಫೋಟೋದ ಗುಣಮಟ್ಟ ತಪಾಸಣೆ",
+        "sec4_title": "4. ಕಣ್ಣ್ದ ಕಲೆ ಬೊಕ್ಕ ಲಕ್ಷಣಗಳ ವಿವರ",
+        "sec5_title": "5. ಅಂತರರಾಷ್ಟ್ರೀಯ ICDR ಮಾನದಂಡ",
+        "sec6_title": "6. ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ ರೆಫರಲ್ ಮಾರ್ಗದರ್ಶಿ",
+        "sec7_title": "7. ವೈದ್ಯಾಧಿಕಾರಿ / ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೆನ ಪರಿಶೀಲನೆ",
+        "chk_agree": "<strong>ಒಪ್ಪಿಗೆ:</strong> AI ಗ್ರೇಡ್ ಬೊಕ್ಕ ವರದಿನ್ ದೃಢೀಕರಿಸುವೆ.",
+        "chk_modify": "<strong>ಬದಲಾವಣೆ:</strong> ಗ್ರೇಡ್ ಬದಲಾವಣೆ ಮಲ್ಪುಲೆ: [ ] 0  [ ] 1  [ ] 2  [ ] 3  [ ] 4",
+        "chk_reject": "<strong>ತಿರಸ್ಕಾರ:</strong> ಸ್ಪಷ್ಟತೆ ಇಜ್ಜಿ / ಕಣ್ಣ್ದ ನೇರ ಪರೀಕ್ಷೆ ಬೋಡು.",
+        "lbl_notes": "ಡಾಕ್ಟ್ರೆನ ಟಿಪ್ಪಣಿ:",
+        "lbl_sig": "ಡಾಕ್ಟ್ರೆನ ಸಹಿ ಬೊಕ್ಕ ಮೊಹರು",
+
+        "sec8_title": "8. ರೋಗಿಗ್ ಸಮಾಧಾನ ಬೊಕ್ಕ ಧ್ವನಿ ವಿವರಣೆ",
+        "audio_title": "ಧ್ವನಿ ವಿವರಣೆ (ಕೇನ್ಲೆ)",
+        "audio_play_note": "• <strong>ಪ್ಲೇ (Play ▶) ಬಟನ್ ಒತ್ತುಲೆ:</strong> ಡಾಕ್ಟ್ರು ರೋಗಿಗ್ ಪನ್ಪಿನಂಚನೆ ಧ್ವನಿಡ್ ಕೇನ್ಲೆ.",
+
+        "txt-sec8-low-title": "ರೋಗಿಗ್ ಜಾಗ್ರತೆಲು ಬೊಕ್ಕ ಆಹಾರ ಪಥ್ಯ (ಮರ್ದ್ ಇಜ್ಜಂದೆ ನೈಸರ್ಗಿಕ ತಡೆ)",
+        "txt-sec8-low-sub": "ಕಮ್ಮಿ ಅಪಾಯ ಮಟ್ಟ: ನೈಸರ್ಗಿಕ ಬೊಕ್ಕ ಆಹಾರ ನಿಯಂತ್ರಣ — ಮರ್ದ್ ಇಜ್ಜಂದೆ ಸುರುತ ತಡೆಗಟ್ಟುವಿಕೆ.",
+        "txt-dont-heading": "ದಾದ ಮಲ್ಪರೆ ಬಲ್ಲಿ / ದಾದ ತಿನರೆ ಬಲ್ಲಿ (Don'ts):",
+        "txt-do-heading": "ದಾದ ಮಲ್ಪೊಡು / ಎಡ್ಡೆ ಅಭ್ಯಾಸಲು (Do's):",
+
+        "txt-sec8-why-label": "ಉಂದು ದಾಯೆ ಆತ್ಂಡ್? (ಸೀಕ್ದ ಮೂಲ ಕಾರಣ):",
+        "txt-sec8-why-high-label": "ಗಂಭೀರ ಕಾರಣ: ಉಂದು ದಾಯೆ ಆತ್ಂಡ್? (ರೆಟಿನಾ ಅಪಾಯ):",
+        "txt-sec8-parhez-label": "ದಾದ ಪಥ್ಯ ಮಲ್ಪೊಡು? (ಆಹಾರ ಬೊಕ್ಕ ನಡತೆ ಪಥ್ಯ):",
+        "txt-sec8-doc-label": "ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೆನ್ ತೂದು ದಾದ ಪರೀಕ್ಷೆ ಮಲ್ಪೊಡು:",
+        "txt-sec8-doc-high-label": "ರೆಟಿನಾ ಡಾಕ್ಟ್ರೆನ್ ತೂದು ತುರ್ತು ಚಿಕಿತ್ಸೆ ದೆತೊನ್ಲೆ:",
+        "txt-sec8-restr-label": "ನೆತ್ತೆರ್ ಬರ್ಪಿನೆನ್ ತಡೆಗಟ್ಟಿಯರೆ ಕಟ್ಟುನಿಟ್ಟಾದ ನಿಯಮಲು:",
+
+        "sec9_title": "9. ಆಡಿಟ್ ಟ್ರಯಲ್ ಬೊಕ್ಕ ನಿಯಮಾವಳಿ",
+        "sec10_title": "10. ಡಾಕ್ಟ್ರೆನ ಅಭಿಪ್ರಾಯ ಬೊಕ್ಕ ತಂತ್ರಜ್ಞಾನ ಸುಧಾರಣೆ ಫಾರ್ಮ್",
+        "lbl_fb_name": "ಡಾಕ್ಟ್ರೆನ ಪುದರ್",
+        "lbl_fb_spec": "ವಿಭಾಗ / ಪರಿಣತಿ",
+        "lbl_fb_fac": "ಆಸ್ಪತ್ರೆ / ಆರೋಗ್ಯ ಕೇಂದ್ರ",
+        "opt_agree": "✅ AI ಗ್ರೇಡ್‌ಗ್ ಒಪ್ಪಿಗೆ",
+        "opt_over": "⚠️ AI ಜಾಸ್ತಿ ಅಪಾಯ ಪನ್ದ್ಂಡ್",
+        "opt_under": "❌ AI ಲಕ್ಷಣ ತೂತಿಜಿ (ಕಮ್ಮಿ ಪನ್ದ್ಂಡ್)",
+        "opt_inconclusive": "⚪ ಸ್ಪಷ್ಟತೆ ಇಜ್ಜಿ / ಫೋಟೋ ಸರಿಯಿಜ್ಜಿ",
+        "lbl_fb_truth": "ಡಾಕ್ಟರ್ ಖಚಿತ ಮಲ್ತಿನ ಗ್ರೇಡ್",
+        "lbl_fb_gradcam": "ಹೀಟ್‌ಮ್ಯಾಪ್ ಪ್ರಯೋಜನ",
+        "lbl_fb_check": "ಕಣ್ಣ್ಡ್ ತೋಜಿದ್ ಬತ್ತಿನ ಲಕ್ಷಣಲು:",
+        "lbl_fb_notes": "ತಂತ್ರಜ್ಞಾನ ಸುಧಾರಣೆಗ್ ಸಲಹೆಲು:",
+        "btn_fb_submit": "ಅಭಿಪ್ರಾಯ ಕಡಪುಲೆ",
+        "fb_success": "ಡಾಕ್ಟ್ರೆನ ಅಭಿಪ್ರಾಯ ಸೇವ್ ಆತ್ಂಡ್! ತಂತ್ರಜ್ಞಾನ ಸುಧಾರಣೆಗ್ ಉಂದು ಸಹಾಯ ಆಪುಂಡು."
+    }
+};
+
+
+// =============================================================================
+// COMPREHENSIVE MULTILINGUAL ENGINE (English, Hindi, Marathi, Tulu)
+// =============================================================================
+const CURRENT_REPORT_GRADE = {{ model.grade }};
+
+const GRADE_DYNAMIC_CONTENT = {
+    0: {
+        "en": {
+            "verdict": "Normal: Retina is clear and intact. No signs of retinopathy.",
+            "triage": "Routine annual screening in 12 months at primary care centre.",
+            "donts": [
+                "Avoid refined sugars, sweets, jaggery, sodas, and packed sweetened juices.",
+                "Avoid fried snacks, fast food, refined flour (maida), and excess trans-fats.",
+                "Avoid smoking, bidi, tobacco, and alcohol consumption entirely.",
+                "Do not vigorously rub or press your eyes with hands.",
+                "Do not purchase or instill unprescribed over-the-counter eye drops."
+            ],
+            "dos": [
+                "Eat green leafy vegetables (spinach, fenugreek), carrots, and high-fiber grains.",
+                "Engage in 30 to 40 minutes of daily brisk walking or light aerobic exercise.",
+                "Drink 2.5 to 3 liters of water daily and ensure 7 to 8 hours of sleep.",
+                "Monitor and maintain fasting and post-prandial blood sugar and blood pressure logs.",
+                "Schedule a routine annual dilated fundus screening in 12 months."
+            ]
+        },
+        "hi": {
+            "verdict": "सामान्य: आँखों का पर्दा बिल्कुल साफ और स्वस्थ है। बीमारी का कोई लक्षण नहीं है।",
+            "triage": "12 महीने में एक बार प्राथमिक स्वास्थ्य केंद्र पर नियमित वार्षिक जांच कराएं।",
+            "donts": [
+                "चीनी, गुड़, मिठाई, कोल्ड ड्रिंक्स और पैक्ड फ्रूट जूस का सेवन न करें।",
+                "मैदा, समोसा, कचौरी, तला-भुना और जंक फ़ूड से पूरी तरह परहेज करें।",
+                "तंबाकू, बीड़ी, सिगरेट और शराब का पूर्ण परहेज करें (नसों की सुरक्षा हेतु)।",
+                "आँखों को हाथों से जोर-जोर से न रगड़ें और न मलें।",
+                "बिना डॉक्टर के पर्चे के मेडिकल स्टोर से कोई आई ड्रॉप न डालें।"
+            ],
+            "dos": [
+                "हरी पत्तेदार सब्जियां (पालक, मेथी), गाजर, खीरा और फाइबर युक्त साबुत अनाज लें।",
+                "रोजाना 30 से 40 मिनट नियमित हल्की कसरत या तेज चाल (Brisk Walking) की आदत डालें।",
+                "पर्याप्त पानी पिएं (2.5 - 3 लीटर/दिन) और रात में 7 से 8 घंटे की गहरी नींद लें।",
+                "फास्टिंग व खाने के बाद शुगर तथा ब्लड प्रेशर की नियमित जांच कर डायरी बनाएं।",
+                "हर 12 महीने में पुतली फैलाकर रेटिना की नियमित जांच कराएं।"
+            ]
+        },
+        "mr": {
+            "verdict": "सामान्य: डोळ्यांचा पडदा स्वच्छ आणि निरोगी आहे. आजाराची कोणतीही लक्षणे नाहीत.",
+            "triage": "12 महिन्यांतून एकदा नियमित डोळ्यांची तपासणी करा.",
+            "donts": [
+                "साखर, गूळ, मिठाई, शीतपेये आणि पॅकबंद गोड रसांचे सेवन टाळा.",
+                "मैदा, समोसा, तळलेले पदार्थ आणि जंक फूड पूर्णपणे वर्ज्य करा.",
+                "तंबाखू, विडी, सिगारेट आणि दारूपासून पूर्णपणे लांब राहा.",
+                "डोळे हाताने जोरात चोळू नका.",
+                "डॉक्टरांच्या सल्ल्याशिवाय कोणतेही आय ड्रॉप वापरू नका."
+            ],
+            "dos": [
+                "हिरव्या पालेभाज्या (पालक, मेथी), गाजर, काकडी व फायबरयुक्त धान्याचा आहारात समावेश करा.",
+                "दररोज ३० ते ४० मिनिटे नियमित चालण्याचा व्यायाम करा.",
+                "दिवसभरात पुरेसे पाणी प्या आणि ७ ते ८ तास शांत झोप घ्या.",
+                "रक्तातील साखर आणि रक्तदाब नियमित तपासा.",
+                "दरवर्षी एकदा डोळ्यांचा पडदा तपासून घ्या."
+            ]
+        },
+        "tcy": {
+            "verdict": "ಸಾಮಾನ್ಯ: ಕಣ್ಣ್ದ ಪರ್ದೆ ಬಾರಿ ಸಫಾ ಉಂಡು. ಸಕ್ಕರೆ ಸೀಕ್ದ ಲಕ್ಷಣ ಇಜ್ಜಿ.",
+            "triage": "12 ತಿಂಗೊಳುಡು ಒರ ಕಣ್ಣ್ದ ಪರೀಕ್ಷೆ ಮಲ್ಪುಲೆ.",
+            "donts": [
+                "ಸಕ್ಕರೆ, ಬೆಲ್ಲ, ಸಿಹಿ ತಿಂಡಿಲು, ಕೂಲ್ ಡ್ರಿಂಕ್ಸ್ ತಿನರೆ ಬಲ್ಲಿ.",
+                "ಎಣ್ಣೆಡ್ ಕಾಯ್ತಿನ ತಿಂಡಿ, ಮೈದಾ, ಜಂಕ್ ಫುಡ್ ತಿನ್ಪಿನೆನ್ ಉಂತಾಲೆ.",
+                "ಬೀಡಿ, ಸಿಗರೇಟ್, ತಂಬಾಕು, ಸಾರಾಯಿ ಮುಟ್ಟರೆ ಬಲ್ಲಿ.",
+                "ಕೈಡ್ ಕಣ್ಣ್ ಗಸಿಯರೆ ಬಲ್ಲಿ.",
+                "ಡಾಕ್ಟ್ರೆನ್ ಕೇನಂದೆ ಮೆಡಿಕಲ್ ಶಾಪ್‌ಡ್ದ್ ಡ್ರಾಪ್ಸ್ ಪಾಡರೆ ಬಲ್ಲಿ."
+            ],
+            "dos": [
+                "ಪಚ್ಚೆ ತರಕಾರಿ, ಪಾಲಕ್, ಕ್ಯಾರೆಟ್, ನಾರಿನಾಂಶ ಇತ್ತಿನ ಆಹಾರ ತಿನ್ಲೆ.",
+                "ದಿನಾಲೂ 30-40 ನಿಮಿಷ ನಡಪುನ ಅಭ್ಯಾಸ ಮಲ್ಪುಲೆ.",
+                "ಬೋಡಾಯಿನಾತ್ ನೀರ್ ಪರಲೆ ಬೊಕ್ಕ ಎಡ್ಡೆ ನಿದ್ರೆ ಮಲ್ಪುಲೆ.",
+                "ಸಕ್ಕರೆ ಬೊಕ್ಕ ಬಿಪಿನ್ ಯಾವಾಗ್ಲಾ ಚೆಕ್ ಮಲ್ತೊಂದು ಉಪ್ಪುಲೆ.",
+                "ವರ್ಷಡ್ ಒರ ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೆನ್ ತೂದು ಪರೀಕ್ಷೆ ಮಲ್ಪುಲೆ."
+            ]
+        }
+    },
+    1: {
+        "en": {
+            "verdict": "Early Stage: Isolated microaneurysms detected. Strict dietary parhez advised.",
+            "triage": "Repeat dilated fundus examination in 6 to 12 months.",
+            "donts": [
+                "Avoid refined sugars, sweets, jaggery, sodas, and packed sweetened juices.",
+                "Avoid fried snacks, fast food, refined flour (maida), and excess trans-fats.",
+                "Avoid smoking, bidi, tobacco, and alcohol consumption entirely.",
+                "Do not vigorously rub or press your eyes with hands.",
+                "Do not purchase or instill unprescribed over-the-counter eye drops."
+            ],
+            "dos": [
+                "Eat green leafy vegetables (spinach, fenugreek), carrots, and high-fiber grains.",
+                "Engage in 30 to 40 minutes of daily brisk walking or light aerobic exercise.",
+                "Drink 2.5 to 3 liters of water daily and ensure 7 to 8 hours of sleep.",
+                "Monitor and maintain fasting and post-prandial blood sugar and blood pressure logs.",
+                "Schedule a repeat dilated fundus screening in 6 to 12 months."
+            ]
+        },
+        "hi": {
+            "verdict": "प्रारंभिक अवस्था: सूक्ष्म नसों के उभार (माइक्रोएन्यूरिज्म) मिले हैं। सख्त खानपान परहेज रखें।",
+            "triage": "6 से 12 महीने के भीतर दोबारा रेटिना की पुतली फैलाकर जांच कराएं।",
+            "donts": [
+                "चीनी, गुड़, मिठाई, कोल्ड ड्रिंक्स और पैक्ड फ्रूट जूस का सेवन न करें।",
+                "मैदा, समोसा, कचौरी, तला-भुना और जंक फ़ूड से पूरी तरह परहेज करें।",
+                "तंबाकू, बीड़ी, सिगरेट और शराब का पूर्ण परहेज करें।",
+                "आँखों को हाथों से जोर-जोर से न रगड़ें।",
+                "बिना डॉक्टर के पर्चे के कोई आई ड्रॉप न डालें।"
+            ],
+            "dos": [
+                "हरी पत्तेदार सब्जियां, गाजर, खीरा और फाइबर युक्त साबुत अनाज लें।",
+                "रोजाना 30 से 40 मिनट नियमित हल्की कसरत या तेज चाल की आदत डालें।",
+                "पर्याप्त पानी पिएं (2.5 - 3 लीटर/दिन) और 7 से 8 घंटे की नींद लें।",
+                "ब्लड शुगर व ब्लड प्रेशर की नियमित जांच कर रिकॉर्ड रखें।",
+                "अगले 6 से 12 महीने में दोबारा रेटिना की जांच कराएं।"
+            ]
+        },
+        "mr": {
+            "verdict": "सुरुवातीचा टप्पा: लहान रक्तवाहिन्यांची सूज आढळली आहे. कडक पथ्य पाळा.",
+            "triage": "6 ते 12 महिन्यांत पुन्हा डोळ्यांचा पडदा तपासा.",
+            "donts": [
+                "साखर, गूळ, गोड पदार्थ, शीतपेये पूर्णपणे टाळा.",
+                "तळलेले व मसालेदार पदार्थ, मैदा खाणे बंद करा.",
+                "धूम्रपान व तंबाखूचे सेवन टाळा.",
+                "डोळे चोळणे टाळा.",
+                "डॉक्टरांच्या सल्ल्याशिवाय औषधे घेऊ नका."
+            ],
+            "dos": [
+                "आहारात हिरव्या भाज्या व फळांचे प्रमाण वाढवा.",
+                "दररोज ३० मिनिटे चालण्याचा व्यायाम करा.",
+                "भरपूर पाणी प्या आणि तणावमुक्त राहा.",
+                "रक्तातील साखर नियमित तपासा.",
+                "पुढील ६ ते १२ महिन्यांत पुन्हा नेत्रतपासणी करा."
+            ]
+        },
+        "tcy": {
+            "verdict": "ಸುರುತ ಹಂತ: ಸೂಕ್ಷ್ಮ ರಕ್ತನಾಳದ ಊತ ತೋಜಿದ್ ಬೈದ್ಂಡ್. ಕಟ್ಟುನಿಟ್ಟಾದ ಪಥ್ಯ ಮಲ್ಪುಲೆ.",
+            "triage": "6 ಡ್ದ್ 12 ತಿಂಗೊಳುಡು ಪಿರ ಕಣ್ಣ್ ತೂಪಾವ್ಲೆ.",
+            "donts": [
+                "ಸಕ್ಕರೆ, ಸ್ವೀಟ್ಸ್, ಕೂಲ್ ಡ್ರಿಂಕ್ಸ್ ತಿನರೆ ಬಲ್ಲಿ.",
+                "ಎಣ್ಣೆ ತಿಂಡಿ, ಮೈದಾ ತಿನರೆ ಬಲ್ಲಿ.",
+                "ತಂಬಾಕು, ಸಿಗರೇಟ್ ಮುಟ್ಟರೆ ಬಲ್ಲಿ.",
+                "ಕಣ್ಣ್ ಗಸಿಯರೆ ಬಲ್ಲಿ.",
+                "ಮೆಡಿಕಲ್ ಶಾಪ್ ಡ್ರಾಪ್ಸ್ ಪಾಡರೆ ಬಲ್ಲಿ."
+            ],
+            "dos": [
+                "ಪಚ್ಚೆ ತರಕಾರಿ, ಕ್ಯಾರೆಟ್ ತಿನೊನ್ಲೆ.",
+                "ದಿನಾಲೂ ನಡಪುನ ಅಭ್ಯಾಸ ಮಲ್ಪುಲೆ.",
+                "ಎಡ್ಡೆ ನೀರ್ ಪರಲೆ.",
+                "ಸಕ್ಕರೆ ಬೊಕ್ಕ ಬಿಪಿ ಕಂಟ್ರೋಲ್ ದೀವೊನ್ಲೆ.",
+                "೬-೧೨ ತಿಂಗೊಳುಡು ಪಿರ ಪರೀಕ್ಷೆ ಮಲ್ಪುಲೆ."
+            ]
+        }
+    },
+    2: {
+        "en": {
+            "verdict": "Moderate Severity: Retinal vascular leakage and exudates detected. Ophthalmologist consult required.",
+            "triage": "Consult an ophthalmologist within 2 to 4 weeks for Macular OCT scan.",
+            "why": "Chronically elevated blood glucose levels have weakened retinal microvessel endothelial junctions, leading to microaneurysm breakdown, intraretinal dot hemorrhages, and lipid leakage (hard exudates). Prompt intervention is critical to prevent Diabetic Macular Edema (DME).",
+            "parhez": [
+                "Strict daily dietary sodium restriction (< 5g/day) to prevent systemic capillary pressure surges.",
+                "Absolute elimination of refined sugars, sweets, sugary beverages, and trans-fat-laden foods.",
+                "Avoid sudden heavy weightlifting, forward bending at the waist, or excessive physical straining.",
+                "Maintain strict adherence to prescribed systemic diabetes and hypertension medications."
+            ],
+            "doc_steps": [
+                "Consult a qualified Ophthalmologist (MS/DNB) within 2 to 4 weeks.",
+                "Undergo Macular Optical Coherence Tomography (OCT) to rule out central macular thickening.",
+                "Assess need for early focal macular laser photocoagulation or anti-VEGF therapy.",
+                "Obtain quarterly HbA1c, fasting glucose, and renal panel evaluations."
+            ]
+        },
+        "hi": {
+            "verdict": "मध्यम स्तर: नसों से रिसाव, खून व चर्बी के धब्बे दिखे हैं। नेत्र विशेषज्ञ से 2-4 सप्ताह में मिलें।",
+            "triage": "2 से 4 सप्ताह के भीतर नेत्र रोग विशेषज्ञ से मिलें और मैकुलर OCT जांच कराएं।",
+            "why": "लंबे समय से रक्त में शुगर का स्तर अनियंत्रित रहने के कारण रेटिना की सूक्ष्म रक्तवाहिकाओं की दीवारें कमजोर होकर रिसने लगी हैं। इससे आँखों के पर्दे पर सूक्ष्म रक्तस्राव (Dot Hemorrhages) और पीले रंग के लिपिड जमाव (Hard Exudates) बनने लगे हैं। यदि इसे समय पर न रोका जाए, तो देखने के केंद्र (मैक्युला) में सूजन आ सकती है।",
+            "parhez": [
+                "नमक का सेवन सीमित करें (< 5 ग्राम/दिन) ताकि नसों पर आंतरिक दबाव न बढ़े।",
+                "चीनी, गुड़, मिठाई, कोल्ड ड्रिंक्स और तले-भुने भोजन का पूर्ण त्याग करें।",
+                "अचानक भारी वजन उठाने या आगे झुककर भारी काम करने से बचें।",
+                "अपनी नियमित डायबिटीज़ एवं बीपी की दवाइयों में कोई लापरवाही न बरतें।"
+            ],
+            "doc_steps": [
+                "अगले 2 से 4 सप्ताह के भीतर योग्य नेत्र रोग विशेषज्ञ (Ophthalmologist) से मिलें।",
+                "आँख के पर्दे की सूजन जांचने हेतु मैकुलर ओसीटी (Macular OCT) स्कैन कराएं।",
+                "डॉक्टर के परामर्श अनुसार पर्दे के लेजर अथवा इंजेक्शन की आवश्यकता का मूल्यांकन कराएं।",
+                "हर 3 से 6 महीने में रेटिना की नियमित फॉलो-अप जांच सुनिश्चित करें।"
+            ]
+        },
+        "mr": {
+            "verdict": "मध्यम टप्पा: रक्तवाहिन्यांची गळती व डाग आढळले आहेत. 2-4 आठवड्यात नेत्रतज्ज्ञांना भेटा.",
+            "triage": "2 ते 4 आठवड्यांत नेत्रतज्ज्ञांना भेटा आणि मॅक्युलर OCT तपासणी करा.",
+            "why": "दीर्घकाळ रक्तातील साखर वाढलेली राहिल्यामुळे डोळ्यांच्या पडद्यातील सूक्ष्म रक्तवाहिन्या कमकुवत होऊन गळती सुरू झाली आहे. यामुळे पडद्यावर रक्ताचे डाग आणि चरबीचे पिवळे थर जमा झाले आहेत. वेळेवर उपचार न केल्यास दृष्टीच्या केंद्रात सूज येऊ शकते.",
+            "parhez": [
+                "आहारातील मिठाचे प्रमाण कमी करा, ज्यामुळे रक्तवाहिन्यांवर ताण येणार नाही.",
+                "साखर, मिठाई, शीतपेये आणि तेलकट पदार्थांचे सेवन पूर्णपणे बंद करा.",
+                "अचानक जड वजन उचलणे किंवा पुढे वाकून जड काम करणे टाळा.",
+                "मधुमेह आणि रक्तदाबाची औषधे डॉक्टरांच्या सल्ल्यानुसार नियमित घ्या."
+            ],
+            "doc_steps": [
+                "पुढील २ ते ४ आठवड्यांत नेत्रतज्ज्ञांना भेटा.",
+                "मॅक्युलर ओसीटी (Macular OCT) तपासणी करून पडद्यावर सूज आहे का ते तपासा.",
+                "आवश्यकतेनुसार लेझर किंवा इंजेक्शन उपचारांबाबत डॉक्टरांचा सल्ला घ्या.",
+                "दर ३ ते ६ महिन्यांनी डोळ्यांचा पडदा पुन्हा तपासा."
+            ]
+        },
+        "tcy": {
+            "verdict": "ಮಧ್ಯಮ ಹಂತ: ರಕ್ತನಾಳ ಸೋರಿಕೆ ಬೊಕ್ಕ ಕಲೆ ತೋಜಿದ್ ಬೈದ್ಂಡ್. 2-4 ವಾರೊಡು ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೆನ್ ತೂಲೆ.",
+            "triage": "2 ಡ್ದ್ 4 ವಾರೊಡು ಕಣ್ಣ್ದ ಡಾಕ್ಟ್ರೆನ್ ತೂದು OCT ಸ್ಕ್ಯಾನ್ ಮಲ್ಪುಲೆ.",
+            "why": "ಬಾರಿ ಕಾಲೊಡ್ದು ಸಕ್ಕರೆ ಜಾಸ್ತಿ ಇತ್ತಿನೆಡ್ದಾವರ ಕಣ್ಣ್ದ ಪರ್ದೆದ ಸೂಕ್ಷ್ಮ ರಕ್ತನಾಳಲು ಬಲಹೀನವಾದ್ ನೆತ್ತೆರ್ ಬೊಕ್ಕ ಕೊಬ್ಬುದ ಕಲೆಲು ಜಮೆ ಆವೊಂದುಂಡು. ತಕ್ಷಣ ಚಿಕಿತ್ಸೆ ಮಲ್ತಿಜಿಂಡ ಕಣ್ಣ್ದ ಮುಖ್ಯ ಭಾಗಡ್ ಊತ ಬರ್ಪಿನ ಅಪಾಯ ಉಂಡು.",
+            "parhez": [
+                "ಉಪ್ಪು ತಿನರೆ ಕಮ್ಮಿ ಮಲ್ಪುಲೆ, ಬಿಪಿ ಜಾಸ್ತಿ ಆವಂದಿಲೆಕ ತೂಲೆ.",
+                "ಸಕ್ಕರೆ, ಬೆಲ್ಲ, ಸ್ವೀಟ್ಸ್, ಕೂಲ್ ಡ್ರಿಂಕ್ಸ್ ಪೂರ್ತಿ ಉಂತಾಲೆ.",
+                "ಬಾರೊದ ಸಾಮಾನು ದೆರ್ಪರೆ ಬಲ್ಲಿ, ತಿರ್ತ್ ಬಗ್ಗಿದ್ ಬೇಲೆ ಮಲ್ಪರೆ ಬಲ್ಲಿ.",
+                "ಸಕ್ಕರೆದ ಮರ್ದ್‌ನ್ ನಿಯಮಿತವಾದ್ ದೆತೊನ್ಲೆ."
+            ],
+            "doc_steps": [
+                "೨ ಡ್ದ್ ೪ ವಾರೊಡು ಕಣ್ಣ್ದ ಸ್ಪೆಷಲಿಸ್ಟ್ ಡಾಕ್ಟ್ರೆನ್ ತೂಲೆ.",
+                "ಕಣ್ಣ್ದ ಮ್ಯಾಕ್ಯುಲರ್ OCT ಸ್ಕ್ಯಾನ್ ಮಲ್ಪುಲೆ.",
+                "ಲೇಸರ್ ಅಥವಾ ಇಂಜೆಕ್ಷನ್ ಚಿಕಿತ್ಸೆ ಬೋಡಾ ಪನ್ಪಿನೆನ್ ಡಾಕ್ಟ್ರೆಡ ಕೇನ್ಲೆ.",
+                "ಪ್ರತಿ ೩-೬ ತಿಂಗೊಳುಡು ಕಣ್ಣ್ ಪರೀಕ್ಷೆ ಮಲ್ಪುಲೆ."
+            ]
+        }
+    },
+    3: {
+        "en": {
+            "verdict": "High Risk: Retinal ischemia and 4:2:1 risk. Urgent vitreoretinal specialist referral within 1-2 weeks.",
+            "triage": "URGENT: Consult a retina specialist within 1 to 2 weeks for laser/injection evaluation.",
+            "why": "Severe microvascular occlusion has led to extensive capillary non-perfusion and hypoxia across retinal quadrants (meeting 4:2:1 criteria). The retina is deprived of adequate oxygen, prompting dangerous angiogenic signaling that precedes proliferative disease.",
+            "doc_steps": [
+                "Urgent consultation with a Vitreoretinal Specialist within 1 to 2 weeks.",
+                "Comprehensive Fundus Fluorescein Angiography (FFA) and High-Res OCT workup.",
+                "Evaluation for Panretinal Photocoagulation (PRP Laser) to prevent neovascularization.",
+                "Strict blood pressure and glycemic stabilization under Physician supervision."
+            ],
+            "restrictions": [
+                "ABSOLUTE BAN on lifting heavy weights, gym workouts, or strenuous physical labor.",
+                "Avoid bending forward at the waist or performing straining activities (Valsalva maneuvers).",
+                "Avoid sudden head movements or contact sports that could trigger intraocular hemorrhage.",
+                "Seek immediate emergency ophthalmic care if you experience sudden floaters or loss of vision."
+            ]
+        },
+        "hi": {
+            "verdict": "उच्च जोखिम: नसों में रुकावट (4:2:1 स्टेज)। 1-2 सप्ताह में तुरंत रेटिना स्पेशलिस्ट को दिखाएं।",
+            "triage": "अति आवश्यक: 1 से 2 सप्ताह के भीतर रेटिना स्पेशलिस्ट को दिखाएं (लेजर/इंजेक्शन जांच हेतु)।",
+            "why": "रेटिना के कई हिस्सों में रक्तवाहिकाएं पूरी तरह बंद (Occluded) हो चुकी हैं, जिससे पर्दे को पर्याप्त ऑक्सीजन नहीं मिल पा रही है (4:2:1 नियम के तहत गंभीर इस्कीमिया)। ऑक्सीजन की भारी कमी के कारण रेटिना में खतरनाक नई नसें बनने का खतरा चरम पर है, जिससे अचानक आँखों की रोशनी जा सकती है।",
+            "doc_steps": [
+                "अगले 1 से 2 सप्ताह के भीतर किसी बड़े अस्पताल में रेटिना विशेषज्ञ (Vitreoretinal Specialist) को तुरंत दिखाएं।",
+                "आँखों के पर्दे की एंजियोग्राफी (FFA) एवं ओसीटी जांच कराएं।",
+                "समय रहते लेजर (PRP) अथवा एंटी-वीईजीएफ इंजेक्शन के मूल्यांकन हेतु परामर्श लें।",
+                "फिजिशियन से मिलकर ब्लड प्रेशर और शुगर को तुरंत नियंत्रित करें।"
+            ],
+            "restrictions": [
+                "सख्त पाबंदी: भारी वजन उठाना, जिम में कसरत करना या भारी शारीरिक मेहनत पूर्णतः बंद करें।",
+                "आगे की ओर झुकना या खांसते/छींकते समय अत्यधिक जोर लगाने से बचें।",
+                "झटकेदार गतिविधियां या खेलकूद न करें, जिससे पर्दे की कमजोर नसों से खून रिसने का खतरा हो।",
+                "यदि आँखों के आगे अचानक काले धब्बे, लाल धुंधलापन या अंधेरा छाए, तो बिना एक मिनट गंवाए तुरंत इमरजेंसी अस्पताल पहुंचे।"
+            ]
+        },
+        "mr": {
+            "verdict": "उच्च धोका: रक्तवाहिन्यांमध्ये अडथळा. 1 ते 2 आठवड्यात तातडीने रेटिना तज्ज्ञांना भेटा.",
+            "triage": "तातडीचे: 1 ते 2 आठवड्यांत रेटिना तज्ज्ञांना भेटा (लेसर/इंजेक्शन तपासणीसाठी).",
+            "why": "डोळ्यांच्या पडद्यातील अनेक रक्तवाहिन्या पूर्णपणे बंद झाल्यामुळे पडद्याला प्राणवायू मिळणे बंद झाले आहे (गंभीर इस्केमिया). यामुळे दृष्टी कायमस्वरूपी नष्ट होण्याचा मोठा धोका निर्माण झाला आहे.",
+            "doc_steps": [
+                "पुढील १ ते २ आठवड्यांत तातडीने रेटिना तज्ज्ञांची भेट घ्या.",
+                "डोळ्यांची अँजिओोग्राफी (FFA) व ओसीटी तपासणी करा.",
+                "लेझर (PRP) किंवा इंजेक्शन उपचारांबाबत तातडीने निर्णय घ्या.",
+                "रक्तदाब आणि साखर त्वरित नियंत्रणात आणा."
+            ],
+            "restrictions": [
+                "कडक निर्बंध: जड वजन उचलणे, व्यायाम करणे किंवा कष्टाची कामे पूर्णपणे बंद करा.",
+                "पुढे वाकणे किंवा जोरात खोकताना डोळ्यांवर ताण देणे टाळा.",
+                "झटक्याने हालचाली करणे टाळा, ज्यामुळे डोळ्यात रक्तस्राव होऊ शकतो.",
+                "अचानक दृष्टी कमी झाल्यास तातडीने मोठ्या रुग्णालयात जा."
+            ]
+        },
+        "tcy": {
+            "verdict": "ಜಾಸ್ತಿ ಅಪಾಯ: ನರೊಟು ನೆತ್ತೆರ್ ಬರ್ಪುನೆ ಉಂತುದುಂಡು. 1-2 ವಾರೊಡು ರೆಟಿನಾ ಡಾಕ್ಟ್ರೆನ್ ತೂಲೆ.",
+            "triage": "ಬಾರಿ ತುರ್ತು: 1 ಡ್ದ್ 2 ವಾರೊಡು ರೆಟಿನಾ ಡಾಕ್ಟ್ರೆನ್ ತೂಲೆ (ಲೇಸರ್ ಚಿಕಿತ್ಸೆಗಾದ್).",
+            "why": "ಕಣ್ಣ್ದ ಪರ್ದೆಡ್ ರಕ್ತನಾಳಲು ಪೂರ್ತಿ ಮುಚ್ಚಿದ್ ಆಮ್ಲಜನಕ ತಿಕ್ಕಂದೆ ಮಲ್ಲ ಅಪಾಯ ಆತ್ಂಡ್. ಬೇಗನೆ ಚಿಕಿತ್ಸೆ ಮಲ್ತಿಜಿಂಡ ಕಣ್ಣ್ದ ದೃಷ್ಟಿ ಪೋಪಿನ ಅಪಾಯ ಉಂಡು.",
+            "doc_steps": [
+                "೧-೨ ವಾರೊಡು ರೆಟಿನಾ ಸ್ಪೆಷಲಿಸ್ಟ್ ಡಾಕ್ಟ್ರೆನ್ ತೂಲೆ.",
+                "ಕಣ್ಣ್ದ ಎಂಜಿಯೋಗ್ರಫಿ ಬೊಕ್ಕ ಓಸಿಟಿ ಪರೀಕ್ಷೆ ಮಲ್ಪುಲೆ.",
+                "ಲೇಸರ್ ಅಥವಾ ಇಂಜೆಕ್ಷನ್ ಚಿಕಿತ್ಸೆ ತಕ್ಷಣ ದೆತೊನ್ಲೆ.",
+                "ಬಿಪಿ ಬೊಕ್ಕ ಸಕ್ಕರೆನ್ ತಕ್ಷಣ ಕಂಟ್ರೋಲ್ ಮಲ್ಪುಲೆ."
+            ],
+            "restrictions": [
+                "ಕಟ್ಟುನಿಟ್ಟಾದ ನಿಯಮ: ಬಾರೊದ ಸಾಮಾನು ದೆರ್ಪರೆ ಬಲ್ಲಿ, ಜಿಮ್ ಮಲ್ಪರೆ ಬಲ್ಲಿ.",
+                "ತಿರ್ತ್ ಬಗ್ಗಿದ್ ಬೇಲೆ ಮಲ್ಪರೆ ಬಲ್ಲಿ.",
+                "ತಲೆ ಗಡಬಡ ಮಲ್ಪುನೆ ಉಂತಾಲೆ.",
+                "ಕಣ್ಣ್ ಎದುರು ಕಪ್ಪು ಕಲೆ ತೋಜುಂಡ ತಕ್ಷಣ ಎಮರ್ಜೆನ್ಸಿ ಆಸ್ಪತ್ರೆಗ್ ಪೋಲೆ."
+            ]
+        }
+    },
+    4: {
+        "en": {
+            "verdict": "Emergency: Active fragile neovascularization. Immediate hospital referral within 24-48 hours.",
+            "triage": "EMERGENCY: Visit a specialized apex eye hospital within 24 to 48 hours.",
+            "why": "Severe retinal hypoxia has triggered a massive release of VEGF, stimulating the growth of fragile, abnormal new blood vessels across the optic disc and retina (NVD/NVE). These vessels can rupture at any moment, causing massive vitreous hemorrhage or tractional retinal detachment.",
+            "doc_steps": [
+                "Emergency presentation to an apex tertiary eye hospital within 24 to 48 hours.",
+                "Immediate Panretinal Photocoagulation (PRP Laser) or Anti-VEGF injection to regress new vessels.",
+                "Pre-vitrectomy surgical assessment if vitreous hemorrhage or traction is present.",
+                "Continuous monitoring by a senior Vitreoretinal Surgeon."
+            ],
+            "restrictions": [
+                "ABSOLUTE BAN on all physical exertion, lifting, straining, or bending forward.",
+                "Sleep with head elevated at 30-45 degrees to help clear potential vitreous blood.",
+                "Avoid forceful coughing or Valsalva straining.",
+                "EMERGENCY: Immediate hospital admission required if vision blackout occurs."
+            ]
+        },
+        "hi": {
+            "verdict": "आपातकालीन: नाजुक नई नसें बन गई हैं। 24 से 48 घंटे में बड़े नेत्र अस्पताल जाएं।",
+            "triage": "आपातकालीन: 24 से 48 घंटे के भीतर किसी बड़े टर्शियरी नेत्र अस्पताल पहुंचें।",
+            "why": "ऑक्सीजन की अत्यधिक कमी के कारण आँखों के पर्दे में अत्यंत नाजुक व असामान्य नई रक्तवाहिकाएं (Neovascularization) उग आई हैं। ये नसें इतनी कमजोर होती हैं कि कभी भी अचानक फट सकती हैं, जिससे आँखों के आगे खून फैल सकता है (विट्रियस रक्तस्राव) और पर्दा अपनी जगह से उखड़ सकता है।",
+            "doc_steps": [
+                "अगले 24 से 48 घंटे के भीतर किसी बड़े टर्शियरी नेत्र अस्पताल या रेटिना सेंटर पहुंचें।",
+                "नई नसों को सुखाने हेतु तुरंत लेजर (PRP) अथवा एंटी-वीईजीएफ इंजेक्शन लगवाएं।",
+                "यदि खून फैल चुका हो, तो विट्रेक्टोमी सर्जरी के मूल्यांकन हेतु विशेषज्ञ से सलाह लें।",
+                "वरिष्ठ रेटिना सर्जन की निरंतर निगरानी में रहें।"
+            ],
+            "restrictions": [
+                "पूर्ण प्रतिबंध: किसी भी प्रकार का भारी काम, वजन उठाना या झुकना पूरी तरह बंद।",
+                "सोते समय सिर को तकिये की सहायता से 30 से 45 डिग्री ऊंचा रखें।",
+                "खांसते या शौच के समय पेट पर जोर न लगाएं।",
+                "आपातकालीन: आँखों के आगे लाल धुंध या अंधेरा छाने पर तुरंत इमरजेंसी में भर्ती हों।"
+            ]
+        },
+        "mr": {
+            "verdict": "आणीबाणी: अत्यंत नाजूक नव्या रक्तवाहिन्या तयार झाल्या आहेत. 24-48 तासांत मोठ्या रुग्णालयात जा.",
+            "triage": "आणीबाणी: 24 ते 48 तासांच्या आत मोठ्या नेत्र रुग्णालयात दाखल व्हा.",
+            "why": "डोळ्यांच्या पडद्याला ऑक्सिजन न मिळाल्यामुळे अत्यंत नाजूक नव्या रक्तवाहिन्या तयार झाल्या आहेत. या रक्तवाहिन्या कधीही फुटून डोळ्यात रक्तस्राव होऊ शकतो आणि दृष्टी कायमची जाऊ शकते.",
+            "doc_steps": [
+                "पुढील २४ ते ४८ तासांत मोठ्या नेत्र रुग्णालयात दाखल व्हा.",
+                "नव्या रक्तवाहिन्या नष्ट करण्यासाठी त्वरित लेझर (PRP) किंवा इंजेक्शन घ्या.",
+                "आवश्यक असल्यास व्हिट्रेक्टॉमी शस्त्रक्रियेसाठी तज्ज्ञांचा सल्ला घ्या.",
+                "नेत्रतज्ज्ञांच्या सतत देखरेखीखाली राहा."
+            ],
+            "restrictions": [
+                "कडक बंदी: कोणतेही जड काम करणे किंवा वजन उचलणे पूर्णपणे बंद.",
+                "झोपताना डोके थोडे वर राहील अशा प्रकारे उशी वापरा.",
+                "डोळ्यांवर ताण येईल असे कोणतेही कृत्य करू नका.",
+                "अंधारी आल्यास त्वरित आणीबाणी कक्षात जा."
+            ]
+        },
+        "tcy": {
+            "verdict": "ತುರ್ತು ಪರಿಸ್ಥಿತಿ: ಪೊಸ ಸೂಕ್ಷ್ಮ ನರ ಪುಟ್ಟಿದ್ಂಡ್. 24-48 ಗಂಟೆಡ್ ಮಲ್ಲ ಕಣ್ಣ್ದ ಆಸ್ಪತ್ರೆಗ್ ಪೋಲೆ.",
+            "triage": "ತುರ್ತು: 24 ಡ್ದ್ 48 ಗಂಟೆದ ಉಲಾಯಿ ಮಲ್ಲ ಕಣ್ಣ್ದ ಆಸ್ಪತ್ರೆಗ್ ಪೋಲೆ.",
+            "why": "ಕಣ್ಣ್ದ ಪರ್ದೆಡ್ ಆಮ್ಲಜನಕ ಇಜ್ಜಂದೆ ಬಾರಿ ಸೂಕ್ಷ್ಮ ಪೊಸ ನರಲು ಪುಟ್ಟಿದ್ಂಡ್. ಉಂದು ಪುಡಾದ್ ನೆತ್ತೆರ್ ಬರ್ಪಿನ ಮಲ್ಲ ಅಪಾಯ ಉಂಡು. ತಕ್ಷಣ ಚಿಕಿತ್ಸೆ ಮಲ್ತಿಜಿಂಡ ಕಣ್ಣ್ ಕಾಣಂದೆ ಆಪುಂಡು.",
+            "doc_steps": [
+                "೨೪-೪೮ ಗಂಟೆದ ಉಲಾಯಿ ಮಲ್ಲ ಕಣ್ಣ್ದ ಆಸ್ಪತ್ರೆಗ್ ಪೋಲೆ.",
+                "ತಕ್ಷಣ ಲೇಸರ್ (PRP) ಅಥವಾ ಇಂಜೆಕ್ಷನ್ ಚಿಕಿತ್ಸೆ ದೆತೊನ್ಲೆ.",
+                "ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ ಬೋಡಾ ಪನ್ಪಿನೆನ್ ಡಾಕ್ಟ್ರೆಡ ಕೇನ್ಲೆ.",
+                "ರೆಟಿನಾ ಸರ್ಜನ್‌ರೆನ ನಿರಂತರ ಸಂಪರ್ಕೊಡು ಉಪ್ಪುಲೆ."
+            ],
+            "restrictions": [
+                "ಪೂರ್ತಿ ನಿಯಮ: ಬಾರೊದ ಕೆಲಸ ಪೂರ್ತಿ ಉಂತಾಲೆ.",
+                "ಜೆತ್ತೊನುನಗ ತಲೆ ಸ್ವಲ್ಪ ಮಿತ್ತ್ ದೀವೊನ್ಲೆ.",
+                "ಕಣ್ಣ್‌ಗ್ ಒತ್ತಡ ಆಪಿನ ಕೆಲಸ ಮಲ್ಪರೆ ಬಲ್ಲಿ.",
+                "ಕಣ್ಣ್ ಕಾಣಂದೆ ಆಂಡ ತಕ್ಷಣ ಆಸ್ಪತ್ರೆಗ್ ಪೋಲೆ."
+            ]
+        }
+    }
+};
+
+function updateDynamicLanguageContent(lang) {
+    const gradeData = (GRADE_DYNAMIC_CONTENT[CURRENT_REPORT_GRADE] && GRADE_DYNAMIC_CONTENT[CURRENT_REPORT_GRADE][lang]) 
+                      ? GRADE_DYNAMIC_CONTENT[CURRENT_REPORT_GRADE][lang] 
+                      : GRADE_DYNAMIC_CONTENT[CURRENT_REPORT_GRADE]['en'];
+    
+    if (!gradeData) return;
+
+    // Update Etiology Why paragraph
+    const whyEl = document.getElementById('txt-sec8-why-content');
+    if (whyEl && gradeData.why) {
+        whyEl.innerText = gradeData.why;
+    }
+
+    // Update Parhez list
+    const parhezEl = document.getElementById('list-parhez');
+    if (parhezEl && gradeData.parhez) {
+        parhezEl.innerHTML = gradeData.parhez.map(p => '<li style="margin-bottom: 6px;">' + p + '</li>').join('');
+    }
+
+    // Update Doctor Clinical Steps list
+    const docEl = document.getElementById('list-doc-actions');
+    if (docEl && gradeData.doc_steps) {
+        docEl.innerHTML = gradeData.doc_steps.map(s => '<li style="margin-bottom: 6px;"><strong>' + s + '</strong></li>').join('');
+    }
+
+    // Update High Grade Restrictions list
+    const restrEl = document.getElementById('list-restrictions');
+    if (restrEl && gradeData.restrictions) {
+        restrEl.innerHTML = gradeData.restrictions.map(r => '<li style="margin-bottom: 6px;">' + r + '</li>').join('');
+    }
+
+    // Update Low Grade Don'ts & Do's
+    const dontsEl = document.getElementById('list-donts');
+    if (dontsEl && gradeData.donts) {
+        dontsEl.innerHTML = gradeData.donts.map(d => '<li style="margin-bottom: 6px;">' + d + '</li>').join('');
+    }
+    const dosEl = document.getElementById('list-dos');
+    if (dosEl && gradeData.dos) {
+        dosEl.innerHTML = gradeData.dos.map(d => '<li style="margin-bottom: 6px;">' + d + '</li>').join('');
+    }
+}
+
+function setLanguage(lang) {
+    const data = I18N_FULL[lang] || I18N_FULL['en'];
+    updateDynamicLanguageContent(lang);
+
+    // 1. Update all elements having data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (data[key] !== undefined) {
+            el.innerHTML = data[key];
+        }
+    });
+
+    // 2. Update specific element IDs
+    const ids = [
+        'txt-top-banner', 'txt-report-title', 'txt-sub-title',
+        'txt-sec1-title', 'txt-sec1-1-title', 'txt-sec2-title',
+        'txt-sec8-title', 'txt-sec10-title', 'txt-sec8-why-label',
+        'txt-sec8-why-high-label', 'txt-sec8-parhez-label',
+        'txt-sec8-doc-label', 'txt-sec8-doc-high-label', 'txt-sec8-restr-label',
+        'txt-dont-heading', 'txt-do-heading', 'txt-sec8-low-title', 'txt-sec8-low-sub'
+    ];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id]) {
+            el.innerHTML = data[id];
+        }
+    });
+
+    // 3. Update active button state
+    document.querySelectorAll('.lang-buttons .lang-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('btn-lang-' + lang);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // 4. Save preference in localStorage
+    try {
+        localStorage.setItem("dr_preferred_language", lang);
+    } catch(e) {}
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    try {
+        const savedLang = localStorage.getItem("dr_preferred_language") || "hi";
+        setLanguage(savedLang);
+    } catch(e) {}
+});
+
+function submitClinicianFeedback() {
+    const payload = getFeedbackPayload();
+    
+    // Persist in localStorage
+    try {
+        const storageKey = 'dr_feedback_' + payload.patient_id;
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch(e) {}
+
+    // Show visual confirmation
+    const alertBox = document.getElementById('feedbackSuccessAlert');
+    if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function downloadFeedbackJSON() {
+    const payload = getFeedbackPayload();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+    const downloadAnchor = document.createElement('a');
+    const safePid = (payload.patient_id || 'patient').replace(/[^a-zA-Z0-9_-]/g, '_');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "doctor_feedback_" + safePid + ".json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    submitClinicianFeedback();
+}
+</script>
+
+</body>
+</html>
